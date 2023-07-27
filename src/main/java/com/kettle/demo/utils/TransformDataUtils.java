@@ -182,7 +182,6 @@ public class TransformDataUtils {
                         }
 
                         if (dataSql != null) {
-
                             statementCommon = executeSql(dataSql, connection);
                             ResultSet resultSet = statementCommon.executeQuery(dataSql);
                             kettleLog.logBasic("当前传输表名为:  " + s1);
