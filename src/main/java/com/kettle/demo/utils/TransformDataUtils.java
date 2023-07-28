@@ -186,6 +186,7 @@ public class TransformDataUtils {
                             ResultSet resultSet = statementCommon.executeQuery(dataSql);
                             kettleLog.logBasic("当前传输表名为:  " + s1);
 
+
                             infoMaps = ResultSetUtils.allResultSetToJson(resultSet);
 
                             //新加已查完数据的处理 默认为1，已完成的标识为2，当所有的表传输完成后全部重置为1
