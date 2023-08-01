@@ -303,6 +303,7 @@ public class TransformDataUtils {
                                                 kettleLog.logBasic("---更新数据同步成功状态-- ");
                                             } catch (Exception e) {
                                                 e.printStackTrace();
+                                                kettleLog.logError(e+"");
                                             }
                                         }
                                         if (returnIds.size() > 0) {
@@ -316,6 +317,7 @@ public class TransformDataUtils {
                                                 kettleLog.logBasic("---更新数据同步失败状态-- ");
                                             } catch (Exception e) {
                                                 e.printStackTrace();
+                                                kettleLog.logError(e+"");
                                             }
                                         }
 
@@ -339,6 +341,7 @@ public class TransformDataUtils {
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
+                                kettleLog.logError(e+"");
                             }
                         }
                         kettleLog.logBasic(s1+ "----------------------success");
