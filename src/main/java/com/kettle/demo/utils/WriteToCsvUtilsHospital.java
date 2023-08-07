@@ -19,7 +19,7 @@ import static com.kettle.demo.utils.CsvUtils.writeCSV;
 
 
 public class WriteToCsvUtilsHospital {
-    public static void writeToCsv(String tableName,String source) throws Exception {
+    public static void writeToCsv(String tableName,String source,String name) throws Exception {
         LogChannelFactory logChannelFactory = new org.pentaho.di.core.logging.LogChannelFactory();
         LogChannel kettleLog = logChannelFactory.create("统计医院数据质量（电子病历）");
 
@@ -102,7 +102,7 @@ public class WriteToCsvUtilsHospital {
 
 
         //设置路径及文件名称
-        String fileName = "C:\\Users\\Administrator\\Desktop\\data\\hospital_dzbl.csv";
+        String fileName = "C:\\Users\\Administrator\\Desktop\\data\\"+name+"_hospital_dzbl.csv";
         writeCSV(fileName, data);
     }
 
