@@ -12,9 +12,10 @@ public class JDBCUtils {
     //jdbc:mysql://localhost:3306/test
     private static String POSTGRESQLURL = "jdbc:postgresql://ip:port/dbname?searchpath=schema";
     //jdbc:postgresql://localhost:5432/postgres?searchpath=test
-    private static String ORACLEURL = "jdbc:oracle:thin:@ip:port:dbname";
+    private static String ORACLEURL = "jdbc:oracle:thin:@ip:port/dbname"; //jdbc:oracle:thin:@ip:port:dbname
     //jdbc:oracle:thin:@10.0.108.21:1521:jyk
-
+    //oracle 19c连接用/不用:
+    private static String SQLSERVERURL = "jdbc:sqlserver://ip:port;databaseName=dbname";
 
     public static Connection getConnection(String databaseType, String ip, String port, String dbname, String schema, String user, String password) throws SQLException {
 
@@ -33,8 +34,11 @@ public class JDBCUtils {
         if (databaseType.equals("oracle")) {
             ORACLEURL = ORACLEURL.replace("dbname", dbname).replace("ip", ip).replace("port", port);
 //            kettleLog.logBasic("-----url----"+ORACLEURL);
-
             return DriverManager.getConnection(ORACLEURL, user, password);
+        }
+        if (databaseType.equals("sqlserver")) {
+            SQLSERVERURL = SQLSERVERURL.replace("dbname", dbname).replace("ip", ip).replace("port", port);
+            return DriverManager.getConnection(SQLSERVERURL, user, password);
         }
         return null;
 

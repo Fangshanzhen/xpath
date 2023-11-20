@@ -34,8 +34,15 @@ public class Constant {
 
     public final static String countOracleSql = "select start_time from @.etl_count   where rownum =1 ";
 
+    public final static String countsqlserverSql = "select top 1 start_time from @.etl_count   ";
+
     public final static String tableSqlPostgreSql1 = "select 'schemaname' ||'@'|| tableName  from schemaname.tablestatus where status=1 ";
 
     public final static String tableSqlOraclel1 = "select 'schemaname' ||'@'|| TABLENAME  from schemaname.tablestatus where status=1 ";
+
+    public final static String sqlserverSql = "select top number123 * from tableName  where sjtbzt=0   " ;
+
+
+    public final static String tableSqlsqlserver = "select concat ('schemaname' ,'@', tablename )  from schemaname.tablestatus where status=1 ";
 
 }

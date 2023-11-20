@@ -19,13 +19,15 @@ import java.io.File;
 
 public class xmlTest {
     public static void main(String[] args) throws Exception {
-        String filePath = "C:\\Users\\fsz\\Desktop\\.kettle\\shared.xml";
-        xmlUtils.change(filePath,"127.0.0.1","127.0.0.1");
-
+//        String filePath = "C:\\Users\\fsz\\Desktop\\.kettle\\shared.xml";
+//        xmlUtils.change(filePath,"127.0.0.1","127.0.0.1");
+         String a="V_EMRTMR";
+        System.out.println(a.substring(2));
 
 
     }
 }
+
 
 
 

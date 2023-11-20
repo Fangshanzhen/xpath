@@ -22,10 +22,10 @@ import static java.util.stream.Collectors.toList;
 
 
 /**
- * 默认中间库为postgresql数据库，若为别的数据库则需要修改代码 最新代码
+ * 中间库为sqlserver数据库
  */
 
-public class TransformDataUtils {
+public class SqlserverTransUtils {
 
     public static String transformData(String databaseType, String baseUrl, String dbname, String schema, String ip, String port,
                                        String username, String password,
@@ -34,7 +34,7 @@ public class TransformDataUtils {
         LogChannelFactory logChannelFactory = new org.pentaho.di.core.logging.LogChannelFactory();
         LogChannel kettleLog = logChannelFactory.create("上报数据");
 
-        Connection connection = null; //默认postgresql
+        Connection connection = null;
         String s = null;
 
         try {
@@ -46,26 +46,25 @@ public class TransformDataUtils {
         }
 
         if (connection != null) {
+            connection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
             kettleLog.logBasic(databaseType + "数据库连接成功");
             try {
                 List<String> tableList = new ArrayList<>();
                 String tableSql = null;
                 String countSql = null;
                 String timeSql = null;
-                if (databaseType.equals("postgresql")) {
+                if (databaseType.equals("sqlserver")) {
 //                tableSql = Constant.tableSqlPostgreSql.replace("?", schema);
-                    tableSql = Constant.tableSqlPostgreSql1.replace("schemaname", schema);
-                    countSql = Constant.countSql.replace("@", schema);
+                    tableSql = Constant.tableSqlsqlserver.replace("schemaname", schema);
+                    countSql = Constant.countsqlserverSql.replace("@", schema);
                 }
-                if (databaseType.equals("mysql")) {
-                    tableSql = Constant.tablesqlMysql.replace("?", schema);
-                    tableSql = Constant.tableSqlPostgreSql1.replace("schemaname", schema);
-                }
+
 
                 Statement statementTable = null;
                 ResultSet resultSetTable = null;
                 try {
-                    statementTable = executeSql(tableSql, connection);
+                    System.out.println("--------" + String.valueOf(connection.getHoldability() == ResultSet.HOLD_CURSORS_OVER_COMMIT));
+                    statementTable = connection.createStatement();
                     resultSetTable = statementTable.executeQuery(tableSql);
                     if (resultSetTable != null) {
                         tableList = ResultSetUtils.allResultSet(resultSetTable);    //获取所有表名
@@ -87,7 +86,7 @@ public class TransformDataUtils {
                 ResultSet resultSetToken = null;
                 String tokenSql = "SELECT token  FROM  " + schema + ".token_time  ";
                 List<String> tokenList = null;
-                tokenTime = executeSql(tokenSql, connection);
+                tokenTime = connection.createStatement();
                 resultSetToken = tokenTime.executeQuery(tokenSql);
                 try {
                     if (resultSetToken != null) {
@@ -96,15 +95,17 @@ public class TransformDataUtils {
                     if (tokenList == null || (tokenList.size() == 0) || (tokenList.size() > 0 && tokenList.get(0) == null)
                             || (tokenList.size() > 0 && tokenList.get(0).equals("")) || (tokenList.size() > 0 && tokenList.get(0).equals("null"))) {
                         accessToken = getToken(baseUrl, secret, clientId);
-                        Date date = new Date();
-                        long a = date.getTime() + 30 * 60 * 1000;  //30分钟
-                        String sql = "UPDATE " + schema + ".token_time " + " SET token= " + "'" + accessToken + "'" + "  ,  token_time= " + a;
-                        tokenTime = executeSql(sql, connection);
-                        tokenTime.execute(sql);
+                        if (accessToken != null) {
+                            Date date = new Date();
+                            long a = date.getTime() + 30 * 60 * 1000;  //30分钟
+                            String sql = "UPDATE " + schema + ".token_time " + " SET token= " + "'" + accessToken + "'" + "  ,  token_time= " + a;
+                            tokenTime = connection.createStatement();
+                            tokenTime.execute(sql);
+                        }
                     } else if (tokenList.size() > 0 && tokenList.get(0) != null && !tokenList.get(0).equals("null")) { //有token
                         tokenSql = "SELECT token_time  FROM  " + schema + ".token_time  ";
                         List<String> timeList = new ArrayList<>();
-                        tokenTime = executeSql(tokenSql, connection);
+                        tokenTime = connection.createStatement();
                         resultSetToken = tokenTime.executeQuery(tokenSql);
                         if (resultSetToken != null) {
                             timeList = ResultSetUtils1.allResultSet(resultSetToken);
@@ -120,7 +121,7 @@ public class TransformDataUtils {
                                 long a1 = date1.getTime() + 30 * 60 * 1000;
                                 String sql1 = "UPDATE " + schema + ".token_time  " + " SET token = " + "'" + accessToken + "'" + "  ,  token_time= " + a1;
 
-                                tokenTime = executeSql(sql1, connection);
+                                tokenTime = connection.createStatement();
                                 tokenTime.execute(sql1);
                             }
                         }
@@ -140,7 +141,7 @@ public class TransformDataUtils {
                 if (tableList != null && tableList.size() > 0) {
                     for (String s1 : tableList) {
 
-                        StringBuilder errorSqlAll = new StringBuilder("insert into  "+schema+".error_log (tablename, id, success, errorlog, errortime) values"); //针对妇幼医院postgresql，把错误信息写进数据库
+                        StringBuilder errorSqlAll = new StringBuilder("insert into  " + schema + ".error_log (tablename, id, success, errorlog, errortime) values"); //针对妇幼医院postgresql，把错误信息写进数据库
 
                         Statement statementCommon;
                         List<Map<String, Object>> infoMaps = new ArrayList<>();
@@ -165,23 +166,18 @@ public class TransformDataUtils {
                                 updateTableEndSql = "update  " + schemaName + ".tablestatus   set  status = ";
                             }
                         }
-                        //MYSQL
-                        if (databaseType.equals("mysql")) {
-                            tableName = s1;
-                            dataSql = (Constant.dataSql + num).replace("tableName", tableName);
-                            updateSql = "update  " + dbname + '.' + tableName;
-                        }
-                        //ORACLE
-                        if (databaseType.equals("oracle")) {
+
+                        //sqlserver
+                        if (databaseType.equals("sqlserver")) {
                             tableName = s1.split("@")[1];
-                            String owner = s1.split("@")[0];
-                            dataSql = (Constant.oracleSql + num).replace("tableName", owner + '.' + tableName);
-                            updateSql = "update  " + owner + '.' + tableName;
-                            updateTableEndSql = "update  " + owner + ".tablestatus   set  status = ";
+                            String schemaName = s1.split("@")[0];
+                            dataSql = (Constant.sqlserverSql).replace("tableName", schemaName + '.' + tableName).replace("number123", num);
+                            updateSql = "update  " + schemaName + '.' + tableName;
+                            updateTableEndSql = "update  " + schemaName + ".tablestatus   set  status = ";
                         }
 
                         if (dataSql != null) {
-                            statementCommon = executeSql(dataSql, connection);
+                            statementCommon = connection.createStatement();
                             ResultSet resultSet = statementCommon.executeQuery(dataSql);
                             kettleLog.logBasic("当前传输表名为:  " + s1);
 
@@ -191,7 +187,7 @@ public class TransformDataUtils {
                             //新加已查完数据的处理 默认为1，已完成的标识为2，当所有的表传输完成后全部重置为1
                             if (infoMaps == null || infoMaps.size() == 0) {
                                 updateTableEndSql = updateTableEndSql + " 2  where tableName = '" + tableName + "'";
-                                statementCommon = executeSql(updateTableEndSql, connection);
+                                statementCommon = connection.createStatement();
                                 statementCommon.execute(updateTableEndSql);
                             }
 
@@ -223,7 +219,7 @@ public class TransformDataUtils {
                                 SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                                 String startTime = formatter.format(date);
                                 try {
-                                    statementTime = executeSql(countSql, connection);
+                                    statementTime = connection.createStatement();
                                     resultSetTime = statementTime.executeQuery(countSql);
 
                                     startTimeList = ResultSetUtils.allResultSet(resultSetTime);
@@ -236,7 +232,7 @@ public class TransformDataUtils {
                                         transformDataTime(baseUrl, typeMap, accessToken);   //调用开始或结束标志接口
                                         timeSql = "update " + schema + "." + "etl_count  set start_time ='" + startTime + "'";
 //                                    timeSql = "insert into " + schema + "." + "etl_count (start_time, end_time) values(' " + startTime + "'" + ", null)";
-                                        statementTime = executeSql(timeSql, connection);
+                                        statementTime =connection.createStatement();
                                         statementTime.execute(timeSql);
                                         kettleLog.logBasic(" -----【数据上报开始时间为：】----" + startTime);
                                     }
@@ -297,12 +293,12 @@ public class TransformDataUtils {
                                             updateSql = updateSql + " set sjtbzt = 1 " + "where dataid in (" + newIdList + " )";
 
                                             try {
-                                                statementCommon = executeSql(updateSql, connection);
+                                                statementCommon = connection.createStatement();
                                                 statementCommon.execute(updateSql);
                                                 kettleLog.logBasic("---更新数据同步成功状态-- ");
                                             } catch (Exception e) {
                                                 e.printStackTrace();
-                                                kettleLog.logError(e+"");
+                                                kettleLog.logError(e + "");
                                             }
                                         }
                                         if (returnIds.size() > 0) {
@@ -311,12 +307,12 @@ public class TransformDataUtils {
                                             String errorIdList = "'" + StringUtils.join(returnIds, "','") + "'";
                                             String errorDataSql = updateSql1 + " set sjtbzt = 2 " + "where dataid in (" + errorIdList + " )";
                                             try {
-                                                statementCommon = executeSql(errorDataSql, connection);
+                                                statementCommon = connection.createStatement();
                                                 statementCommon.execute(errorDataSql);
                                                 kettleLog.logBasic("---更新数据同步失败状态-- ");
                                             } catch (Exception e) {
                                                 e.printStackTrace();
-                                                kettleLog.logError(e+"");
+                                                kettleLog.logError(e + "");
                                             }
                                         }
 
@@ -334,16 +330,16 @@ public class TransformDataUtils {
                             try {
                                 if (errorSqlAll.toString().contains(tableName)) { //
                                     kettleLog.logBasic("errorSqlAll  " + errorSqlAll);
-                                    Statement statementError = executeSql(errorSqlAll.toString(), connection);
+                                    Statement statementError = connection.createStatement();
                                     statementError.execute(errorSqlAll.toString());
                                     close(statementError, null);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                kettleLog.logError(e+"");
+                                kettleLog.logError(e + "");
                             }
                         }
-                        kettleLog.logBasic(s1+ "----------------------success");
+                        kettleLog.logBasic(s1 + "----------------------success");
 
                     }
                 }
@@ -358,7 +354,7 @@ public class TransformDataUtils {
                 ResultSet resultSetTime1 = null;
                 List<String> startTimeList1 = new ArrayList<>();
                 try {
-                    statementTime1 = executeSql(countSql, connection);
+                    statementTime1 = connection.createStatement();
                     resultSetTime1 = statementTime1.executeQuery(countSql);
 
                     startTimeList1 = ResultSetUtils.allResultSet(resultSetTime1);
@@ -374,9 +370,9 @@ public class TransformDataUtils {
                             kettleLog.logBasic(" -----【数据上报结束时间为：】----" + endTime);
                             timeSql = "update " + schema + "." + "etl_count  set start_time =null";
                             String updateTableEndSql = "update  " + schema + ".tablestatus   set  status = 1";  //状态全部置为1
-                            statementTime1 = executeSql(timeSql, connection);
+                            statementTime1 = connection.createStatement();
                             statementTime1.execute(timeSql);
-                            statementTime2 = executeSql(updateTableEndSql, connection);
+                            statementTime2 = connection.createStatement();
                             statementTime2.execute(updateTableEndSql);
                             s = "2";   //如果结束传输，s置为2，利用数据校验插件终止kettle循环任务
                         }
@@ -384,7 +380,7 @@ public class TransformDataUtils {
                     }
                     if (allIds == 0 && (startTimeList1 == null || startTimeList1.get(0) == null)) { //无起始时间，且无数据直接结束 防止一直死循环
                         String updateTableEndSql = "update  " + schema + ".tablestatus   set  status = 1";  //状态全部置为1
-                        statementTime2 = executeSql(updateTableEndSql, connection);
+                        statementTime2 = connection.createStatement();
                         statementTime2.execute(updateTableEndSql);
                         kettleLog.logBasic("无新数据上报，结束上报任务！");
                         return "2";
@@ -458,7 +454,7 @@ public class TransformDataUtils {
             kettleResponse = HttpClientUtils.doPost(TokenUrl, null, null);
         } catch (IOException e) {
             e.printStackTrace();
-            kettleLog.logError("获取token出现异常: "+e);
+            kettleLog.logError("获取token出现异常: " + e);
             return null;
         }
         if (kettleResponse.getCode() == 200) {
@@ -491,7 +487,7 @@ public class TransformDataUtils {
             kettleResponse = HttpClientUtils.doPost(DataUrl, accessToken, JSON.toJSONString(transformMap, SerializerFeature.WriteMapNullValue));
         } catch (IOException e) {
             e.printStackTrace();
-            kettleLog.logError("调用请求出现异常: "+e);
+            kettleLog.logError("调用请求出现异常: " + e);
             return null;
         }
         if (kettleResponse.getCode() == 200) {
@@ -519,15 +515,15 @@ public class TransformDataUtils {
 
     }
 
-
-    private static Statement executeSql(String sql, Connection connection) throws Exception {
-        Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY,
-                 ResultSet.CLOSE_CURSORS_AT_COMMIT);
-        statement.setQueryTimeout(6000);
-        statement.setFetchSize(100000);
-        statement.setEscapeProcessing(false);
-        return statement;
-    }
+//
+//    private static Statement executeSql(String sql, Connection connection) throws Exception {
+//        Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY,
+//                ResultSet.CLOSE_CURSORS_AT_COMMIT);
+//        statement.setQueryTimeout(6000);
+//        statement.setFetchSize(100000);
+//        statement.setEscapeProcessing(false);
+//        return statement;
+//    }
 
     private static void close(Statement statement, ResultSet resultSet) throws SQLException {
         if (resultSet != null) {

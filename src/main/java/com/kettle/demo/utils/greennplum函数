@@ -1,0 +1,305 @@
+CREATE OR REPLACE FUNCTION count_table_split("database1" varchar, "table1" varchar, limit1 integer ,offset1 integer )
+  RETURNS TABLE("database" text, "table" text, "column" text, "count" int8 ,"notempty" int8, "empty" int8, "ratio" text) AS $BODY$
+declare
+v_msg character varying :='';
+v_msg1 character varying :='';
+course refcursor;
+BEGIN
+if not exists(select 1 from information_schema.columns
+where table_schema=''||database1||'' and table_name=''||table1||'')
+then
+RAISE EXCEPTION '请输入正确的库名和表名！';
+end if;
+open course for execute 'select column_name
+from information_schema.columns
+where table_schema='''||database1||''' and table_name='''||table1||'''
+and column_name!=''id'' and column_name !=''timestamp''  and column_name !=''checkversion'' and column_name not like ''parent_id_%''
+order by column_name
+
+limit ''' || limit1 ||''' offset '''|| offset1 || '''
+ ;';
+
+
+loop
+fetch course into v_msg1;
+if found then
+v_msg :=v_msg||'select '''||database1||''' as database1,'''||table1||''' as table1,'''||v_msg1||''' as column1, count(*) as  count1,
+sum(case when '||v_msg1||' is null or '||v_msg1||'::varchar ='''' then 0 else 1 end) as notempty1,
+count(*)-sum(case when '||v_msg1||' is null or '||v_msg1||'::varchar ='''' then 0 else 1 end) as empty1,
+100-round(sum(case when '||v_msg1||' is null or '||v_msg1||'::varchar ='''' then 0 else 1 end)/count(*)::numeric*100,2)||''%'' as ratio1
+from '||database1||'.'||table1||' group by 1
+union all'||chr(10);
+        else
+            exit;
+        end if;
+end loop;
+close course;
+
+ v_msg :=v_msg||'select '''||database1||''' as database1,'''||table1||''' as table1,  ''_count'' as column1,
+count(*) as count1, null as  notempty1,  null  as empty1,    null as ratio1
+from '||database1||'.'||table1||' group by 1';
+
+--raise notice '%',v_msg;
+return query execute v_msg;
+END; $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000
+
+
+
+  select * from count_table_split('public','bdopcr_11',50,50)
+
+
+  -----------------------------------------------------------------------------------------------
+
+
+  CREATE OR REPLACE FUNCTION count_table("database1" varchar, "table1" varchar)
+  RETURNS TABLE("database" text, "table" text, "column" text, "count" int8 ,"notempty" int8, "empty" int8, "ratio" text) AS $BODY$
+declare
+v_msg character varying :='';
+v_msg1 character varying :='';
+course refcursor;
+BEGIN
+if not exists(select 1 from information_schema.columns
+where table_schema=''||database1||'' and table_name=''||table1||'')
+then
+RAISE EXCEPTION '请输入正确的库名和表名！';
+end if;
+open course for execute 'select column_name
+from information_schema.columns
+where table_schema='''||database1||''' and table_name='''||table1||'''
+and column_name!=''id'' and column_name !=''timestamp''  and column_name !=''checkversion'' and column_name not like ''parent_id_%''
+order by column_name   ;';
+loop
+fetch course into v_msg1;
+if found then
+v_msg :=v_msg||'select '''||database1||''' as database1,'''||table1||''' as table1,'''||v_msg1||''' as column1, count(*) as  count1,
+sum(case when '||v_msg1||' is null or '||v_msg1||'::varchar ='''' then 0 else 1 end) as notempty1,
+count(*)-sum(case when '||v_msg1||' is null or '||v_msg1||'::varchar ='''' then 0 else 1 end) as empty1,
+100-round(sum(case when '||v_msg1||' is null or '||v_msg1||'::varchar ='''' then 0 else 1 end)/count(*)::numeric*100,2)||''%'' as ratio1
+from '||database1||'.'||table1||' group by 1
+union all'||chr(10);
+        else
+            exit;
+        end if;
+end loop;
+close course;
+v_msg :=v_msg||'select '''||database1||''' as database1,'''||table1||''' as table1,''count'' as column1,
+count(*) as notempty1, count(*) as  count1,  ''0''  as empty1,    ''100.00%'' as ratio1
+from '||database1||'.'||table1||' group by 1';
+
+--raise notice '%',v_msg;
+return query execute v_msg;
+END; $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000
+
+ 调用：select * from count_table('public','cbjcjb_6') ;
+
+ -----------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION totalRecords()
+RETURNS integer as $total$
+DECLARE
+total integer := 0;
+perCount integer := 0;
+result RECORD;
+name RECORD;  --RECORD记录变量类似于行类型变量
+tables varchar;
+getCount varchar;
+BEGIN
+tables := 'select tablename from pg_tables where schemaname = ''public''   and tablename like ''emr%'' order by tablename ';
+FOR name IN EXECUTE tables LOOP
+getCount := 'select count(*) from ' || name.tablename;
+FOR result IN EXECUTE getCount LOOP
+RAISE NOTICE '%:%',name.tablename,result.count;
+total = total + result.count;
+END LOOP;
+END LOOP;
+
+RAISE NOTICE 'totalSum: %',total;
+
+RETURN total;
+
+END;
+
+$total$ LANGUAGE plpgsql;
+
+
+调用：select * from totalRecords()
+
+
+
+————————————————————————————————————————————————————————————————————
+统计筛选来自医院上报的数据
+
+
+CREATE OR REPLACE FUNCTION count_table_hospital("database1" varchar, "table1" varchar,"id1" varchar)
+  RETURNS TABLE("database" text, "table" text, "column" text, "count" int8 ,"notempty" int8, "empty" int8, "ratio" text) AS $BODY$
+declare
+v_msg character varying :='';
+v_msg1 character varying :='';
+course refcursor;
+BEGIN
+if not exists(select 1 from information_schema.columns
+where table_schema=''||database1||'' and table_name=''||table1||'')
+then
+RAISE EXCEPTION '请输入正确的库名和表名！';
+end if;
+open course for execute 'select column_name
+from information_schema.columns
+where table_schema='''||database1||''' and table_name='''||table1||'''
+and column_name !=''id''  and column_name !=''timestamp''  and column_name !=''checkversion'' and column_name not like ''parent_id_%''
+order by column_name   ;';
+loop
+fetch course into v_msg1;
+if found then
+v_msg :=v_msg||'select '''||database1||''' as database1,'''||table1||''' as table1,'''||v_msg1||''' as column1, count(*) as  count1,
+sum(case when '||v_msg1||' is null or '||v_msg1||'::varchar ='''' then 0 else 1 end) as notempty1,
+count(*)-sum(case when '||v_msg1||' is null or '||v_msg1||'::varchar ='''' then 0 else 1 end) as empty1,
+100-round(sum(case when '||v_msg1||' is null or '||v_msg1||'::varchar ='''' then 0 else 1 end)/count(*)::numeric*100,2)||''%'' as ratio1
+from '||database1||'.'||table1||' where id like  '''||id1 ||'''    group by 1
+union all'||chr(10);
+        else
+            exit;
+        end if;
+end loop;
+close course;
+v_msg :=v_msg||'select '''||database1||''' as database1,'''||table1||''' as table1,''count'' as column1,
+count(*) as notempty1, count(*) as  count1,  ''0''  as empty1,    ''100.00%'' as ratio1
+from '||database1||'.'||table1||'  where id like  '''||id1 ||'''  group by 1';
+
+raise notice '%',v_msg;
+return query execute v_msg;
+END; $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000
+
+调用：  select * from count_table_hospital('public','emrpif_9','13\_%') ;
+
+
+
+------------------------------------------------------------------------
+
+来源是区县平台数据
+
+CREATE OR REPLACE FUNCTION count_table_quxian("database1" varchar, "table1" varchar)
+  RETURNS TABLE("database" text, "table" text, "column" text, "count" int8 ,"notempty" int8, "empty" int8, "ratio" text) AS $BODY$
+declare
+v_msg character varying :='';
+v_msg1 character varying :='';
+course refcursor;
+BEGIN
+if not exists(select 1 from information_schema.columns
+where table_schema=''||database1||'' and table_name=''||table1||'')
+then
+RAISE EXCEPTION '请输入正确的库名和表名！';
+end if;
+open course for execute 'select column_name
+from information_schema.columns
+where table_schema='''||database1||''' and table_name='''||table1||'''
+and column_name !=''id''  and column_name !=''timestamp''  and column_name !=''checkversion'' and column_name not like ''parent_id_%''
+order by column_name   ;';
+loop
+fetch course into v_msg1;
+if found then
+v_msg :=v_msg||'select '''||database1||''' as database1,'''||table1||''' as table1,'''||v_msg1||''' as column1, count(*) as  count1,
+sum(case when '||v_msg1||' is null or '||v_msg1||'::varchar ='''' then 0 else 1 end) as notempty1,
+count(*)-sum(case when '||v_msg1||' is null or '||v_msg1||'::varchar ='''' then 0 else 1 end) as empty1,
+100-round(sum(case when '||v_msg1||' is null or '||v_msg1||'::varchar ='''' then 0 else 1 end)/count(*)::numeric*100,2)||''%'' as ratio1
+from '||database1||'.'||table1||' where id  ~ ''^[1-9]\_|1[0-2]\_''
+   group by 1
+union all'||chr(10);
+        else
+            exit;
+        end if;
+end loop;
+close course;
+v_msg :=v_msg||'select '''||database1||''' as database1,'''||table1||''' as table1,''count'' as column1,
+count(*) as notempty1, count(*) as  count1,  ''0''  as empty1,    ''100.00%'' as ratio1
+from '||database1||'.'||table1||'   where id  ~ ''^[1-9]\_|1[0-2]\_''   group by 1';
+
+raise notice '%',v_msg;
+return query execute v_msg;
+END; $BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000
+
+
+
+
+
+
+
+
+
+
+
+
+ select a.*,b.c,b.e   from weinan1 a ,weinan b where a."列名" like '%' ||b.a ||'%'  and length(b.a)>6
+
+
+
+select a.表名 , c.tablename as "表中文名",  b.a as "英文名称",b.d as "标准",b.e as "数据元名称",b.g as "定义",
+
+case when  a.表名  like 'cb%' or a.表名  like 'ch%' then '区县平台+妇幼系统'
+when  a.表名  like 'bdo%'  then '区县平台+妇幼系统'
+else '区县平台'  end as "来源" ,
+a.样本数 ,a.非空数 ,a.缺失数 ,a.缺失率  from "all" a left join weinan b on  substr(a."列名",0,11) = b.a
+left join weinan_table c on substr(a."表名",0,7)=c.table
+where "列名" !='count' and "列名" !='_count'
+
+
+
+select a.表名 , c.tablename as "表中文名", b.a as "英文名称",b.d as "标准",b.e as "数据元名称",b.g as "定义",
+ '妇幼保健医院'   as "来源" ,
+a.样本数 ,a.非空数 ,a.缺失数 ,a.缺失率  from "hospital" a left join weinan b on  substr(a."列名",0,11) = b.a
+left join weinan_table c on substr(a."表名",0,7)=c.table
+where "列名" !='count' and "列名" !='_count'
+
+
+
+select a.表名 , c.tablename as "表中文名", b.a as "英文名称",b.d as "标准",b.e as "数据元名称",b.g as "定义",
+ '渭南市中心医院'   as "来源" ,
+a.样本数 ,a.非空数 ,a.缺失数 ,a.缺失率  from hospital_zhongxin a left join weinan b on  substr(a."列名",0,11) = b.a
+left join weinan_table c on substr(a."表名",0,7)=c.table
+where "列名" !='count' and "列名" !='_count'  and (c.table !='emrps0' and c.table !='emrpd0')
+
+
+union all
+
+select a.表名 , c.tablename as "表中文名", b.a as "英文名称",b.d as "标准",b.e as "数据元名称",b.g as "定义",
+ '区县平台'   as "来源" ,
+a.样本数 ,a.非空数 ,a.缺失数 ,a.缺失率  from "hospital_zhongxin" a left join weinan b on  substr(a."列名",0,10) = b.a
+left join weinan_table c on substr(a."表名",0,7)=c.table
+where "列名" !='count' and "列名" !='_count'  and (c.table='emrps0' or c.table='emrpd0')
+
+
+
+
+
+select a.表名 , c.tablename as "表中文名", b.a as "英文名称",b.d as "标准",b.e as "数据元名称",b.g as "定义",
+ '区县平台'   as "来源" ,
+a.样本数 ,a.非空数 ,a.缺失数 ,a.缺失率  from "quxian" a left join weinan b on  substr(a."列名",0,11) = b.a
+left join weinan_table c on substr(a."表名",0,7)=c.table
+where "列名" !='count' and "列名" !='_count'  and (c.table !='emrps0' and c.table !='emrpd0')
+
+union all
+
+select a.表名 , c.tablename as "表中文名", b.a as "英文名称",b.d as "标准",b.e as "数据元名称",b.g as "定义",
+ '区县平台'   as "来源" ,
+a.样本数 ,a.非空数 ,a.缺失数 ,a.缺失率  from "quxian" a left join weinan b on  substr(a."列名",0,10) = b.a
+left join weinan_table c on substr(a."表名",0,7)=c.table
+where "列名" !='count' and "列名" !='_count'  and (c.table='emrps0' or c.table='emrpd0')
+
+
+
+
+
+
+
+

@@ -158,7 +158,8 @@ public class OracleTransUtils {
 
                         if (dataSql != null) {
                             statementCommon = executeSql(dataSql, connection);
-                            ResultSet resultSet = statementCommon.executeQuery(dataSql);
+                            Statement   statement1=connection.createStatement();
+                            ResultSet resultSet = statement1.executeQuery(dataSql);
                             kettleLog.logBasic("当前传输表名为:  " + s1);
 
                             infoMaps = ResultSetUtils1.allResultSetToJson(resultSet);
@@ -168,6 +169,10 @@ public class OracleTransUtils {
                                 updateTableEndSql = updateTableEndSql + " 2  where tableName = '" + tableName + "'";
                                 statementCommon = executeSql(updateTableEndSql, connection);
                                 statementCommon.execute(updateTableEndSql);
+                            }
+
+                            if(tableName.toLowerCase().startsWith("v_")){
+                                tableName=tableName.substring(2);
                             }
 
                             transformMap.put("collection", tableName.toLowerCase());    //oracle 表名大写改成小写
@@ -329,6 +334,7 @@ public class OracleTransUtils {
                             }
 
                             close(statementCommon, resultSet);
+                            close(statement1,null);
                         }
 
                         errorSqlAll.append("END ;");  //批零插入结束标志
