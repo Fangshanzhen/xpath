@@ -158,11 +158,11 @@ public class OracleTransUtils {
 
                         if (dataSql != null) {
                             statementCommon = executeSql(dataSql, connection);
-                            Statement   statement1=connection.createStatement();
+                            Statement statement1 = connection.createStatement();
                             ResultSet resultSet = statement1.executeQuery(dataSql);
                             kettleLog.logBasic("当前传输表名为:  " + s1);
 
-                            infoMaps = ResultSetUtils1.allResultSetToJson(resultSet);
+                            infoMaps = ResultSetUtils1.allResultSetToJson(resultSet, tableName);
 
                             //新加已查完数据的处理 默认为1，已完成的标识为2，当所有的表传输完成后全部重置为1
                             if (infoMaps == null || infoMaps.size() == 0) {
@@ -171,8 +171,8 @@ public class OracleTransUtils {
                                 statementCommon.execute(updateTableEndSql);
                             }
 
-                            if(tableName.toLowerCase().startsWith("v_")){
-                                tableName=tableName.substring(2);
+                            if (tableName.toLowerCase().startsWith("v_")) {
+                                tableName = tableName.substring(2);
                             }
 
                             transformMap.put("collection", tableName.toLowerCase());    //oracle 表名大写改成小写
@@ -334,7 +334,7 @@ public class OracleTransUtils {
                             }
 
                             close(statementCommon, resultSet);
-                            close(statement1,null);
+                            close(statement1, null);
                         }
 
                         errorSqlAll.append("END ;");  //批零插入结束标志
@@ -349,7 +349,6 @@ public class OracleTransUtils {
                             e.printStackTrace();
                         }
                     }
-
 
 
                 }

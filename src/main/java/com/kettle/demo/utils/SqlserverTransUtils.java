@@ -73,7 +73,7 @@ public class SqlserverTransUtils {
                     close(statementTable, resultSetTable);
                 }
 
-//        kettleLog.logBasic("所有表名为" + tableList);
+
                 if (tableNameTest != null) {
                     tableList = Arrays.asList(tableNameTest.split(","));
                 }
@@ -152,20 +152,7 @@ public class SqlserverTransUtils {
                         String updateSql = null;
                         String updateSql1 = null;
                         String updateTableEndSql = null;
-                        //POSTGRESQL
-                        if (databaseType.equals("postgresql")) {
-                            if (!s1.contains("old") && !s1.contains("etl") && !s1.contains("company") && !s1.contains("immu") && !s1.contains("postalcode")) {
-                                tableName = s1.split("@")[1];
-                                String schemaName = s1.split("@")[0];
-                                dataSql = (Constant.dataSql + num).replace("tableName", schemaName + '.' + tableName);
-                                if (s1.contains("bdmpwh") || s1.contains("bdmsmi") || s1.contains("bdmoph") || s1.contains("bdmtdp") || s1.contains("emrhpi")) {
-                                    dataSql = (Constant.dataSql + (Integer.valueOf(num) - 100)).replace("tableName", schemaName + '.' + tableName);
-                                }
-                                updateSql = "update  " + schemaName + '.' + tableName;
-                                updateSql1 = updateSql;
-                                updateTableEndSql = "update  " + schemaName + ".tablestatus   set  status = ";
-                            }
-                        }
+
 
                         //sqlserver
                         if (databaseType.equals("sqlserver")) {
@@ -173,6 +160,7 @@ public class SqlserverTransUtils {
                             String schemaName = s1.split("@")[0];
                             dataSql = (Constant.sqlserverSql).replace("tableName", schemaName + '.' + tableName).replace("number123", num);
                             updateSql = "update  " + schemaName + '.' + tableName;
+                            updateSql1 = updateSql;
                             updateTableEndSql = "update  " + schemaName + ".tablestatus   set  status = ";
                         }
 
@@ -186,7 +174,7 @@ public class SqlserverTransUtils {
 
                             //新加已查完数据的处理 默认为1，已完成的标识为2，当所有的表传输完成后全部重置为1
                             if (infoMaps == null || infoMaps.size() == 0) {
-                                updateTableEndSql = updateTableEndSql + " 2  where tableName = '" + tableName + "'";
+                                updateTableEndSql = updateTableEndSql + " 2  where tablename = '" + tableName + "'";   //sqlserver数据库注意tablename这个字段如果是text格式会报错，要改成varchar格式
                                 statementCommon = connection.createStatement();
                                 statementCommon.execute(updateTableEndSql);
                             }
@@ -232,7 +220,7 @@ public class SqlserverTransUtils {
                                         transformDataTime(baseUrl, typeMap, accessToken);   //调用开始或结束标志接口
                                         timeSql = "update " + schema + "." + "etl_count  set start_time ='" + startTime + "'";
 //                                    timeSql = "insert into " + schema + "." + "etl_count (start_time, end_time) values(' " + startTime + "'" + ", null)";
-                                        statementTime =connection.createStatement();
+                                        statementTime = connection.createStatement();
                                         statementTime.execute(timeSql);
                                         kettleLog.logBasic(" -----【数据上报开始时间为：】----" + startTime);
                                     }
@@ -326,19 +314,19 @@ public class SqlserverTransUtils {
                             close(statementCommon, resultSet);
                         }
                         errorSqlAll.append(";");
-                        if (ip.equals("10.80.43.251")) {  //针对妇幼保健医院数据库把错误日志信息插入表中，提前建好表
-                            try {
-                                if (errorSqlAll.toString().contains(tableName)) { //
-                                    kettleLog.logBasic("errorSqlAll  " + errorSqlAll);
-                                    Statement statementError = connection.createStatement();
-                                    statementError.execute(errorSqlAll.toString());
-                                    close(statementError, null);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                kettleLog.logError(e + "");
+//                        if (ip.equals("10.80.43.251")) {  //针对妇幼保健医院数据库把错误日志信息插入表中，提前建好表
+                        try {
+                            if (errorSqlAll.toString().contains(tableName)) { //
+                                kettleLog.logBasic("errorSqlAll:----  " + errorSqlAll);
+                                Statement statementError = connection.createStatement();
+                                statementError.execute(errorSqlAll.toString());
+                                close(statementError, null);
                             }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            kettleLog.logError(e + "");
                         }
+//                        }
                         kettleLog.logBasic(s1 + "----------------------success");
 
                     }

@@ -190,7 +190,7 @@ public class TransformDataUtils {
 
                             //新加已查完数据的处理 默认为1，已完成的标识为2，当所有的表传输完成后全部重置为1
                             if (infoMaps == null || infoMaps.size() == 0) {
-                                updateTableEndSql = updateTableEndSql + " 2  where tableName = '" + tableName + "'";
+                                updateTableEndSql = updateTableEndSql + " 2  where tablename = '" + tableName + "'";
                                 statementCommon = executeSql(updateTableEndSql, connection);
                                 statementCommon.execute(updateTableEndSql);
                             }

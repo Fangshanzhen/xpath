@@ -124,7 +124,7 @@ public class OracleViewTransUtils {
                             statementCommon = connection.createStatement();   //查询视图数据
                             ResultSet resultSet = statementCommon.executeQuery(dataSql); //oracle用jdbc需要用 stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql);
                             kettleLog.logBasic("当前传输视图为:  " + s1);
-                            infoMaps = ResultSetUtils1.allResultSetToJson(resultSet);
+                            infoMaps = ResultSetUtils1.allResultSetToJson(resultSet,null);
 
 
                             String newMaxTimeSql = dataSql.replace("*", "max(sjgxsj)"); //获取本次数据中的最大时间

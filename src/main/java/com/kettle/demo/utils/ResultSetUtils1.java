@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class ResultSetUtils1 {
 
-    public static List<Map<String, Object>> allResultSetToJson(ResultSet rs) throws SQLException, JSONException {
+    public static List<Map<String, Object>> allResultSetToJson(ResultSet rs,String table) throws SQLException, JSONException {
         // json数组
 //        JSONArray array = new JSONArray();
         List<Map<String, Object>> list = new ArrayList<>();
@@ -31,7 +31,13 @@ public class ResultSetUtils1 {
                     value = rs.getObject(columnName);
                 } catch (SQLException e) {
                 }
-                map.put(columnName.toLowerCase(), value);  //oracle 字段名大写改成小写
+                if(table.equalsIgnoreCase("ylfy")||table.equalsIgnoreCase("gzxl")
+                        ||table.equalsIgnoreCase("zlzl")||table.equalsIgnoreCase("hlyy")){
+                    map.put(columnName.toLowerCase(), String.valueOf(value));  //oracle 字段名大写改成小写
+                }
+                else {
+                    map.put(columnName.toLowerCase(), value);  //oracle 字段名大写改成小写
+                }
             }
             list.add(map);
         }
