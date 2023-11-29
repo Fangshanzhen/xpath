@@ -74,6 +74,7 @@ public class WriteToCsvUtilsQuxian {
             ResultSet resultSet = null;
             try {
                 for (String s : newTableList) {
+                    kettleLog.logBasic("当前表名：【" + s + "】");
                     String sql = " select * from count_table_quxian('public','@@'); ";  //执行存储过程
                     sql = sql.replace("@@", s);
 

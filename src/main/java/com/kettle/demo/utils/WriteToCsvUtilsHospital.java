@@ -75,6 +75,7 @@ public class WriteToCsvUtilsHospital {
             ResultSet resultSet = null;
             try {
                 for (String s : newTableList) {
+                    kettleLog.logBasic("当前表名：【" + s + "】");
                     String sql = " select * from count_table_hospital('public','@@','source'); ";  //执行存储过程
                     sql = sql.replace("@@", s);
                     sql = sql.replace("source", source);
@@ -99,7 +100,7 @@ public class WriteToCsvUtilsHospital {
         }
 
 
-
+        kettleLog.logBasic("全部表已完成数据质量统计!");
 
         //设置路径及文件名称
         String fileName = "C:\\Users\\Administrator\\Desktop\\data\\"+name+"_hospital_dzbl.csv";

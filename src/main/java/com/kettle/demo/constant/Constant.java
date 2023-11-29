@@ -45,4 +45,6 @@ public class Constant {
 
     public final static String tableSqlsqlserver = "select concat ('schemaname' ,'@', tablename )  from schemaname.tablestatus where status=1 ";
 
+    public final static String tableSqlmysql = "select concat ('schemaname' ,'@', tablename )  from schemaname.tablestatus where status=1 ";
+
 }
