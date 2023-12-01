@@ -41,7 +41,7 @@ public class TransformDataUtils {
             connection = JDBCUtils.getConnection(databaseType, ip, port, dbname, schema, username, password);
         } catch (SQLException e) {
             s = "2";
-            kettleLog.logError("database connection error", "");
+            kettleLog.logError("database connection error: " + e, "");
             return s;
         }
 

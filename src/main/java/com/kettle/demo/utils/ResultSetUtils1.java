@@ -1,6 +1,8 @@
 package com.kettle.demo.utils;
 
 import org.json.JSONException;
+import org.pentaho.di.core.logging.LogChannel;
+import org.pentaho.di.core.logging.LogChannelFactory;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -11,8 +13,11 @@ import java.util.stream.Collectors;
 
 public class ResultSetUtils1 {
 
-    public static List<Map<String, Object>> allResultSetToJson(ResultSet rs,String table) throws SQLException, JSONException {
+    public static List<Map<String, Object>> allResultSetToJson(ResultSet rs, String table) throws SQLException, JSONException {
         // json数组
+
+        LogChannelFactory logChannelFactory = new org.pentaho.di.core.logging.LogChannelFactory();
+        LogChannel kettleLog = logChannelFactory.create("测试");
 //        JSONArray array = new JSONArray();
         List<Map<String, Object>> list = new ArrayList<>();
         // 获取列数
@@ -31,20 +36,22 @@ public class ResultSetUtils1 {
                     value = rs.getObject(columnName);
                 } catch (SQLException e) {
                 }
-                if(table.equalsIgnoreCase("ylfy")||table.equalsIgnoreCase("gzxl")
-                        ||table.equalsIgnoreCase("zlzl")||table.equalsIgnoreCase("hlyy")){
+                if (table.equalsIgnoreCase("ylfy") || table.equalsIgnoreCase("gzxl")
+                        || table.equalsIgnoreCase("zlzl") || table.equalsIgnoreCase("hlyy")) {
                     map.put(columnName.toLowerCase(), String.valueOf(value));  //oracle 字段名大写改成小写
-                }
-                else {
+                } else {
                     map.put(columnName.toLowerCase(), value);  //oracle 字段名大写改成小写
                 }
             }
             list.add(map);
         }
+//        kettleLog.logBasic(String.valueOf(list));
 
-        list = list.stream().collect(Collectors.collectingAndThen(
-                Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(p -> (String) p.get("dataid")))),
-                ArrayList::new));   //根据dataid去重数据，同一批数据必须去重，否则批量插入会报错
+        list = list.stream()
+                .filter(p -> p.get("dataid") != null) // 过滤dataid非空的元素
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(p -> (String) p.get("dataid")))),
+                        ArrayList::new));   //根据dataid去重数据，同一批数据必须去重，否则批量插入会报错
 
 
         if (list.size() > 0) {

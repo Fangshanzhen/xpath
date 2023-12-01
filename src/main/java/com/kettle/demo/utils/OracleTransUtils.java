@@ -42,7 +42,7 @@ public class OracleTransUtils {
 
         } catch (SQLException e) {
             s = "2";
-            kettleLog.logError("database connection error", e);
+            kettleLog.logError("database connection error  " + e, "");
             return s;
         }
 

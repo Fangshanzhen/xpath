@@ -21,7 +21,7 @@ public class Constant {
   public final static String oracleViewSql = "select * from tableName  where sjgxsj>= to_date('last_time','yyyy-mm-dd hh24:mi:ss') and   rownum <=    " ;
 //    public final static String oracleViewSql = "select * from tableName  where PRESCRIBE_DATE >= 'last_time' and   rownum <=  " ;  //test
 
-    public final static String oracleSql = "select * from tableName  where sjtbzt=0 and   rownum <=    " ;
+    public final static String oracleSql = "select * from tableName  where sjtbzt=0 and  dataid is not null and   rownum <=    " ;
 //    public final static String oracleSql = "select * from tableName  where    rownum <=  " ;   //test
 
     public final static String tablesqlOracle="  select OWNER ||'@' ||TABLE_NAME  from all_tables where OWNER='?'    ";
