@@ -33,11 +33,13 @@ public class diaoyong {
 // http://10.80.131.129/api-gate/zuul
         String secret="b9978f7c0ee5480bb432a5b7ba1b2827";
         String clientId="q_client15";
-        String authUrl="http://10.80.116.73/api-gate";
+//        String authUrl="http://10.80.116.73/api-gate";
+        String authUrl="http://10.0.108.51:18010";  //本地测试
 
         String infoUrl="http://10.80.116.73/api-gate/ehr/ehr/access";
 
         String token = getToken(authUrl, secret, clientId);
+        System.out.println("token:  "+token);
         Map<String, Object> transformMap = new HashMap<String, Object>();
         transformMap.put("idType", "03");
         transformMap.put("idCard", "622301195208140815");

@@ -34,7 +34,7 @@ public class ResultSetUtils {
 
                 } catch (SQLException e) {
                 }
-                map.put(columnName, value);
+                map.put(columnName.toLowerCase(), value);
             }
             list.add(map);
         }

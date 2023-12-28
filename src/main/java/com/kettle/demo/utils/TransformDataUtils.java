@@ -333,7 +333,7 @@ public class TransformDataUtils {
                         if (ip.equals("10.80.43.251")) {  //针对妇幼保健医院数据库把错误日志信息插入表中，提前建好表
                             try {
                                 if (errorSqlAll.toString().contains(tableName)) { //
-                                    kettleLog.logBasic("errorSqlAll  " + errorSqlAll);
+//                                    kettleLog.logBasic("errorSqlAll  " + errorSqlAll);
                                     Statement statementError = executeSql(errorSqlAll.toString(), connection);
                                     statementError.execute(errorSqlAll.toString());
                                     close(statementError, null);

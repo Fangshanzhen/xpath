@@ -312,7 +312,7 @@ public class MysqlUtils {
 
                         try {
                             if (errorSqlAll.toString().contains(tableName)) { //
-                                kettleLog.logBasic("errorSqlAll  " + errorSqlAll);
+//                                kettleLog.logBasic("errorSqlAll  " + errorSqlAll);
                                 Statement statementError = executeSql(errorSqlAll.toString(), connection);
                                 statementError.execute(errorSqlAll.toString());
                                 close(statementError, null);

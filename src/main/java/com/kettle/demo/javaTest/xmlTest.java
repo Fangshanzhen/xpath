@@ -1,6 +1,7 @@
 package com.kettle.demo.javaTest;
 
 
+import com.kettle.demo.utils.SqlserverTransUtils;
 import com.kettle.demo.utils.xmlUtils;
 import org.pentaho.di.core.database.Database;
 import org.pentaho.di.core.database.DatabaseMeta;
@@ -19,10 +20,10 @@ import java.io.File;
 
 public class xmlTest {
     public static void main(String[] args) throws Exception {
-//        String filePath = "C:\\Users\\fsz\\Desktop\\.kettle\\shared.xml";
-//        xmlUtils.change(filePath,"127.0.0.1","127.0.0.1");
-         String a="V_EMRTMR";
-        System.out.println(a.substring(2));
+        SqlserverTransUtils.transformData("sqlserver","http://10.80.116.73/api-gate/zuul","mydatabase","mydatabase.dbo",
+               "127.0.0.1","1433","sa","123456","d65e5127f9774c52ae48653fd00de074","client1","1000",
+                "dbo@emrpif"
+                );
 
 
     }

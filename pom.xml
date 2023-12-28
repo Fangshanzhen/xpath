@@ -183,6 +183,11 @@
             <artifactId>kettle-engine</artifactId>
             <version>8.0.0.6-352</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.21</version>
+        </dependency>
 
 
     </dependencies>

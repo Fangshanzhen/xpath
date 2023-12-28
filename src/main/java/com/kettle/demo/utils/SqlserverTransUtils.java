@@ -141,7 +141,9 @@ public class SqlserverTransUtils {
                 if (tableList != null && tableList.size() > 0) {
                     for (String s1 : tableList) {
 
-                        StringBuilder errorSqlAll = new StringBuilder("insert into  " + schema + ".error_log (tablename, id, success, errorlog, errortime) values"); //针对妇幼医院postgresql，把错误信息写进数据库
+                        StringBuilder errorSqlAll = new StringBuilder("insert into  " + schema + ".error_log (tablename, id, success, errorlog, errortime) values");
+
+                        StringBuilder errorSqlAll1 = new StringBuilder("insert into  " + schema + ".error_log (tablename, id, success, errorlog, errortime) values");
 
                         Statement statementCommon;
                         List<Map<String, Object>> infoMaps = new ArrayList<>();
@@ -166,6 +168,7 @@ public class SqlserverTransUtils {
 
                         if (dataSql != null) {
                             statementCommon = connection.createStatement();
+
                             ResultSet resultSet = statementCommon.executeQuery(dataSql);
                             kettleLog.logBasic("当前传输表名为:  " + s1);
 
@@ -179,7 +182,8 @@ public class SqlserverTransUtils {
                                 statementCommon.execute(updateTableEndSql);
                             }
 
-                            transformMap.put("collection", tableName);
+
+                            transformMap.put("collection", tableName.toLowerCase());
                             transformMap.put("infoMaps", infoMaps);
 
                             List<String> idList = new ArrayList<>();
@@ -239,6 +243,9 @@ public class SqlserverTransUtils {
                                     if (returnJsonObject != null) {
                                         kettleLog.logBasic("---调用上传数据接口成功2--- ");
                                         List<String> returnIds = new ArrayList<>();
+
+                                        int batchSize = 0;
+
                                         if (idList.size() > 0 && returnJsonObject.size() > 0) {
                                             for (Object o : returnJsonObject) {
                                                 JSONObject jsonObject = (JSONObject) o;
@@ -261,9 +268,40 @@ public class SqlserverTransUtils {
                                                                 String dateError = formatterError.format(errordate);
                                                                 errorSql = errorSql + "," + "  '" + dateError + "'" + ")"; //errorLog
                                                                 errorSqlAll.append(errorSql);
+
                                                                 if (!returnJsonObject.get(returnJsonObject.size() - 1).equals(o)) {
                                                                     errorSqlAll.append(",");//除去最后一个，其余都加,
                                                                 }
+
+                                                                ++batchSize;
+
+
+                                                                if (batchSize >= 1000) {
+                                                                    if (errorSqlAll.toString().endsWith(",")) {
+                                                                        String s11 = errorSqlAll.toString().substring(0, errorSqlAll.toString().length() - 1);
+                                                                        errorSqlAll = new StringBuilder(s11);
+                                                                    }
+
+                                                                    // 执行 SQL
+                                                                    errorSqlAll.append(";");
+
+                                                                    try {
+                                                                        if (errorSqlAll.toString().contains(tableName)) { //
+                                                                            Statement statementError = connection.createStatement();
+                                                                            statementError.execute(errorSqlAll.toString());
+                                                                            close(statementError, null);
+                                                                        }
+                                                                    } catch (Exception e) {
+                                                                        e.printStackTrace();
+                                                                        kettleLog.logError(e + "");
+                                                                    }
+
+                                                                    // 重置StringBuilder和batchSize。
+                                                                    errorSqlAll=errorSqlAll1;
+                                                                    batchSize = 0;
+                                                                }
+
+
                                                             }
                                                         }
                                                     }
@@ -279,6 +317,7 @@ public class SqlserverTransUtils {
 
                                             String newIdList = "'" + StringUtils.join(idList, "','") + "'";  //加上单引号
                                             updateSql = updateSql + " set sjtbzt = 1 " + "where dataid in (" + newIdList + " )";
+//                                            kettleLog.logBasic("updateSql---------------"+updateSql);
 
                                             try {
                                                 statementCommon = connection.createStatement();
@@ -294,6 +333,8 @@ public class SqlserverTransUtils {
                                             errorNumbers += returnIds.size();
                                             String errorIdList = "'" + StringUtils.join(returnIds, "','") + "'";
                                             String errorDataSql = updateSql1 + " set sjtbzt = 2 " + "where dataid in (" + errorIdList + " )";
+
+
                                             try {
                                                 statementCommon = connection.createStatement();
                                                 statementCommon.execute(errorDataSql);
@@ -313,20 +354,29 @@ public class SqlserverTransUtils {
 
                             close(statementCommon, resultSet);
                         }
-                        errorSqlAll.append(";");
-//                        if (ip.equals("10.80.43.251")) {  //针对妇幼保健医院数据库把错误日志信息插入表中，提前建好表
-                        try {
-                            if (errorSqlAll.toString().contains(tableName)) { //
-                                kettleLog.logBasic("errorSqlAll:----  " + errorSqlAll);
-                                Statement statementError = connection.createStatement();
-                                statementError.execute(errorSqlAll.toString());
-                                close(statementError, null);
+
+                        if (errorSqlAll.toString().length() > 0) {
+                            if (errorSqlAll.toString().endsWith(",")) {
+                                String s11 = errorSqlAll.toString().substring(0, errorSqlAll.toString().length() - 1);
+                                errorSqlAll = new StringBuilder(s11);
                             }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            kettleLog.logError(e + "");
+                            // 执行 SQL
+                            errorSqlAll.append(";");
+
+//                            kettleLog.logBasic("errorSqlAll*********"+errorSqlAll);
+
+                            try {
+                                if (errorSqlAll.toString().contains(tableName)) { //
+                                    Statement statementError = connection.createStatement();
+                                    statementError.execute(errorSqlAll.toString());
+                                    close(statementError, null);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                kettleLog.logError(e + "");
+                            }
                         }
-//                        }
+
                         kettleLog.logBasic(s1 + "----------------------success");
 
                     }
