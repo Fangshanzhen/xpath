@@ -130,7 +130,7 @@ public class OracleTransUtils {
 
                 if (tableList != null && tableList.size() > 0) {
                     for (String s1 : tableList) {
-
+                        kettleLog.logBasic("当前传输表名为:  " + s1);
                         StringBuilder errorSqlAll = new StringBuilder("BEGIN  "); //拼接oracle sql进行批量插入
 
                         Statement statementCommon;
@@ -185,10 +185,10 @@ public class OracleTransUtils {
                             if (infoMaps != null) {
                                 for (Map map : infoMaps) {
                                     if (map.containsKey("dataid")) {
-                                        idList.add((String) map.get("dataid"));
+                                        idList.add(String.valueOf(map.get("dataid")));
                                     }
                                     if (map.containsKey("DATAID")) {
-                                        idList.add((String) map.get("DATAID"));
+                                        idList.add(String.valueOf(map.get("DATAID")));
                                     }
 
                                 }
@@ -337,7 +337,7 @@ public class OracleTransUtils {
                             close(statement1, null);
                         }
 
-                        errorSqlAll.append("END ;");  //批零插入结束标志
+                        errorSqlAll.append("END ;");  //批量插入结束标志
 
                         try {
                             if (errorSqlAll.toString().contains("insert into")) { //

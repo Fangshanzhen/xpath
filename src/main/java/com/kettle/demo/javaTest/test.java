@@ -31,8 +31,8 @@ import java.util.Map;
 public class test {
     public static void main(String[] args) throws IOException {
 // http://10.80.131.129/api-gate/zuul
-        String secret="b7x9i4t3g6r8p5z2q0y1n6l8e9w3v7s9";
-        String clientId="client28";
+        String secret="bv4l7x9p3q5z2f8j1r0s6d8w9k3m6n4a";
+        String clientId="client31";
 
 //        String authUrl="http://10.0.108.51:18010";  //本地测试
         String authUrl="http://10.80.116.73/api-gate/zuul";  //测试环境

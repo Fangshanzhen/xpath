@@ -50,7 +50,7 @@ public class ResultSetUtils1 {
         list = list.stream()
                 .filter(p -> p.get("dataid") != null) // 过滤dataid非空的元素
                 .collect(Collectors.collectingAndThen(
-                        Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(p -> (String) p.get("dataid")))),
+                        Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(p -> String.valueOf( p.get("dataid"))))),
                         ArrayList::new));   //根据dataid去重数据，同一批数据必须去重，否则批量插入会报错
 
 

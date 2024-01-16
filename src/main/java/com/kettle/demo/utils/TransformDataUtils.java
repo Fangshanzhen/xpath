@@ -140,7 +140,7 @@ public class TransformDataUtils {
                 if (tableList != null && tableList.size() > 0) {
                     for (String s1 : tableList) {
 
-                        StringBuilder errorSqlAll = new StringBuilder("insert into  "+schema+".error_log (tablename, id, success, errorlog, errortime) values"); //针对妇幼医院postgresql，把错误信息写进数据库
+                        StringBuilder errorSqlAll = new StringBuilder("insert into  " + schema + ".error_log (tablename, id, success, errorlog, errortime) values"); //针对妇幼医院postgresql，把错误信息写进数据库
 
                         Statement statementCommon;
                         List<Map<String, Object>> infoMaps = new ArrayList<>();
@@ -275,7 +275,7 @@ public class TransformDataUtils {
                                                                 Date errordate = new Date();
                                                                 SimpleDateFormat formatterError = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                                                                 String dateError = formatterError.format(errordate);
-                                                                errorSql = errorSql + "," + "  '" + dateError + "'" + ")"; //errorLog
+                                                                errorSql = errorSql + "," + "  '" + dateError + "'" + ")"; //errortime
                                                                 errorSqlAll.append(errorSql);
                                                                 if (!returnJsonObject.get(returnJsonObject.size() - 1).equals(o)) {
                                                                     errorSqlAll.append(",");//除去最后一个，其余都加,
@@ -302,7 +302,7 @@ public class TransformDataUtils {
                                                 kettleLog.logBasic("---更新数据同步成功状态-- ");
                                             } catch (Exception e) {
                                                 e.printStackTrace();
-                                                kettleLog.logError(e+"");
+                                                kettleLog.logError(e + "");
                                             }
                                         }
                                         if (returnIds.size() > 0) {
@@ -316,7 +316,7 @@ public class TransformDataUtils {
                                                 kettleLog.logBasic("---更新数据同步失败状态-- ");
                                             } catch (Exception e) {
                                                 e.printStackTrace();
-                                                kettleLog.logError(e+"");
+                                                kettleLog.logError(e + "");
                                             }
                                         }
 
@@ -330,20 +330,20 @@ public class TransformDataUtils {
                             close(statementCommon, resultSet);
                         }
                         errorSqlAll.append(";");
-                        if (ip.equals("10.80.43.251")) {  //针对妇幼保健医院数据库把错误日志信息插入表中，提前建好表
-                            try {
-                                if (errorSqlAll.toString().contains(tableName)) { //
+//                        if (ip.equals("10.80.43.251")) {  //针对妇幼保健医院数据库把错误日志信息插入表中，提前建好表
+                        try {
+                            if (errorSqlAll.toString().contains(tableName)) { //
 //                                    kettleLog.logBasic("errorSqlAll  " + errorSqlAll);
-                                    Statement statementError = executeSql(errorSqlAll.toString(), connection);
-                                    statementError.execute(errorSqlAll.toString());
-                                    close(statementError, null);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                kettleLog.logError(e+"");
+                                Statement statementError = executeSql(errorSqlAll.toString(), connection);
+                                statementError.execute(errorSqlAll.toString());
+                                close(statementError, null);
                             }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            kettleLog.logError(e + "");
                         }
-                        kettleLog.logBasic(s1+ "----------------------success");
+//                        }
+                        kettleLog.logBasic(s1 + "----------------------success");
 
                     }
                 }
@@ -458,7 +458,7 @@ public class TransformDataUtils {
             kettleResponse = HttpClientUtils.doPost(TokenUrl, null, null);
         } catch (IOException e) {
             e.printStackTrace();
-            kettleLog.logError("获取token出现异常: "+e);
+            kettleLog.logError("获取token出现异常: " + e);
             return null;
         }
         if (kettleResponse.getCode() == 200) {
@@ -491,7 +491,7 @@ public class TransformDataUtils {
             kettleResponse = HttpClientUtils.doPost(DataUrl, accessToken, JSON.toJSONString(transformMap, SerializerFeature.WriteMapNullValue));
         } catch (IOException e) {
             e.printStackTrace();
-            kettleLog.logError("调用请求出现异常: "+e);
+            kettleLog.logError("调用请求出现异常: " + e);
             return null;
         }
         if (kettleResponse.getCode() == 200) {
@@ -522,7 +522,7 @@ public class TransformDataUtils {
 
     private static Statement executeSql(String sql, Connection connection) throws Exception {
         Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY,
-                 ResultSet.CLOSE_CURSORS_AT_COMMIT);
+                ResultSet.CLOSE_CURSORS_AT_COMMIT);
         statement.setQueryTimeout(6000);
         statement.setFetchSize(100000);
         statement.setEscapeProcessing(false);

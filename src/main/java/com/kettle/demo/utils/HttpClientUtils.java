@@ -49,7 +49,7 @@ public class HttpClientUtils {
         if (token != null) {
             postMethod.addRequestHeader("AIIT-ZHYL-AUTH", token);
         }
-        //   kettleLog.logBasic("--------jsonStr-----------"+jsonStr);
+//           kettleLog.logBasic("--------jsonStr-----------"+jsonStr);
         if (jsonStr != null) {
             RequestEntity requestEntity = new StringRequestEntity(jsonStr, "application/json", "UTF-8");
 
@@ -75,7 +75,7 @@ public class HttpClientUtils {
         } else if (log.contains("accessToken")) {
             kettleLog.logBasic("accessToken: " + log);
         } else {
-//            kettleLog.logBasic(log);
+//           kettleLog.logBasic(log);
         }
 //        kettleLog.logBasic("--------log-----------"+log);
 

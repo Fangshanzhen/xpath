@@ -273,10 +273,10 @@ public class SqlserverTransUtils {
                                                                     errorSqlAll.append(",");//除去最后一个，其余都加,
                                                                 }
 
-                                                                ++batchSize;
+                                                                batchSize = batchSize + 1;
 
 
-                                                                if (batchSize >= 1000) {
+                                                                if (batchSize >= 800) {
                                                                     if (errorSqlAll.toString().endsWith(",")) {
                                                                         String s11 = errorSqlAll.toString().substring(0, errorSqlAll.toString().length() - 1);
                                                                         errorSqlAll = new StringBuilder(s11);
@@ -289,6 +289,8 @@ public class SqlserverTransUtils {
                                                                         if (errorSqlAll.toString().contains(tableName)) { //
                                                                             Statement statementError = connection.createStatement();
                                                                             statementError.execute(errorSqlAll.toString());
+//                                                                            kettleLog.logBasic("errorSqlAll0000000*********"+errorSqlAll);
+
                                                                             close(statementError, null);
                                                                         }
                                                                     } catch (Exception e) {
@@ -297,7 +299,7 @@ public class SqlserverTransUtils {
                                                                     }
 
                                                                     // 重置StringBuilder和batchSize。
-                                                                    errorSqlAll=errorSqlAll1;
+                                                                    errorSqlAll = errorSqlAll1;
                                                                     batchSize = 0;
                                                                 }
 
@@ -363,7 +365,7 @@ public class SqlserverTransUtils {
                             // 执行 SQL
                             errorSqlAll.append(";");
 
-//                            kettleLog.logBasic("errorSqlAll*********"+errorSqlAll);
+//                            kettleLog.logBasic("errorSqlAll11111*********"+errorSqlAll);
 
                             try {
                                 if (errorSqlAll.toString().contains(tableName)) { //

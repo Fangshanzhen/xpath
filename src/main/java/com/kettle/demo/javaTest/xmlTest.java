@@ -20,9 +20,9 @@ import java.io.File;
 
 public class xmlTest {
     public static void main(String[] args) throws Exception {
-        SqlserverTransUtils.transformData("sqlserver","http://10.80.116.73/api-gate/zuul","mydatabase","mydatabase.dbo",
-               "127.0.0.1","1433","sa","123456","d65e5127f9774c52ae48653fd00de074","client1","1000",
-                "dbo@emrpif"
+        SqlserverTransUtils.transformData("sqlserver","http://10.80.116.73/api-gate/zuul","mydatabase","dbo",
+               "127.0.0.1","1433","sa","123456","f9450a45b51b46e3aa6eb98882dd8960","client2","1000",
+                "dbo@cbjcjb"
                 );
 
 
