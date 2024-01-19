@@ -96,11 +96,13 @@ public class TransformDataUtils {
                     if (tokenList == null || (tokenList.size() == 0) || (tokenList.size() > 0 && tokenList.get(0) == null)
                             || (tokenList.size() > 0 && tokenList.get(0).equals("")) || (tokenList.size() > 0 && tokenList.get(0).equals("null"))) {
                         accessToken = getToken(baseUrl, secret, clientId);
-                        Date date = new Date();
-                        long a = date.getTime() + 30 * 60 * 1000;  //30分钟
-                        String sql = "UPDATE " + schema + ".token_time " + " SET token= " + "'" + accessToken + "'" + "  ,  token_time= " + a;
-                        tokenTime = executeSql(sql, connection);
-                        tokenTime.execute(sql);
+                        if(accessToken!=null) {
+                            Date date = new Date();
+                            long a = date.getTime() + 30 * 60 * 1000;  //30分钟
+                            String sql = "UPDATE " + schema + ".token_time " + " SET token= " + "'" + accessToken + "'" + "  ,  token_time= " + a;
+                            tokenTime = executeSql(sql, connection);
+                            tokenTime.execute(sql);
+                        }
                     } else if (tokenList.size() > 0 && tokenList.get(0) != null && !tokenList.get(0).equals("null")) { //有token
                         tokenSql = "SELECT token_time  FROM  " + schema + ".token_time  ";
                         List<String> timeList = new ArrayList<>();
@@ -241,6 +243,8 @@ public class TransformDataUtils {
                                         kettleLog.logBasic(" -----【数据上报开始时间为：】----" + startTime);
                                     }
 
+                                } catch (Exception e) {
+                                    kettleLog.logError(e + "");
                                 } finally {
                                     close(statementTime, resultSetTime);
                                 }
