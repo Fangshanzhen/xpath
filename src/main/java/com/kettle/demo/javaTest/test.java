@@ -27,18 +27,17 @@ import java.util.Map;
  */
 
 
-
 public class test {
     public static void main(String[] args) throws IOException {
 // http://10.80.131.129/api-gate/zuul
-        String secret="x9fj83bakz21q0w5e6yr4l7npmi8s2gh";
-        String clientId="client32";
+        String secret = "x9fj83bakz21q0w5e6yr4l7npmi8s2gh";
+        String clientId = "client32";
 
 //        String authUrl="http://10.0.108.51:18010";  //本地测试
-        String authUrl="http://10.80.116.73/api-gate/zuul";  //测试环境
+        String authUrl = "http://10.80.116.73/api-gate/zuul";  //测试环境
 
         String token = getToken(authUrl, secret, clientId);
-        System.out.println("---获取token--:  "+token);
+        System.out.println("---获取token--:  " + token);
 
     }
 
@@ -61,8 +60,6 @@ public class test {
         }
         return null;
     }
-
-
 
 
     public static kettleResponse doPost(String url, String token, String jsonStr) throws IOException {
@@ -91,7 +88,7 @@ public class test {
         kettleResponse.setCode(statusCode);
 
         InputStream inputStream = postMethod.getResponseBodyAsStream();
-        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8),5*1024*1024);
+        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8), 5 * 1024 * 1024);
         StringBuilder stringBuilder = new StringBuilder();
         String str;
         while ((str = br.readLine()) != null) {
@@ -104,8 +101,6 @@ public class test {
         kettleResponse.setData(log);
         return kettleResponse;
     }
-
-
 
 
 

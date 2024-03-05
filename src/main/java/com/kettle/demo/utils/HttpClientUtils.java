@@ -75,7 +75,7 @@ public class HttpClientUtils {
         } else if (log.contains("accessToken")) {
             kettleLog.logBasic("accessToken: " + log);
         } else {
-//           kettleLog.logBasic(log);
+//          kettleLog.logBasic(log);
         }
 //        kettleLog.logBasic("--------log-----------"+log);
 

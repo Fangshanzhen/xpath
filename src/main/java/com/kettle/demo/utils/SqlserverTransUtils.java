@@ -294,8 +294,14 @@ public class SqlserverTransUtils {
                                                                             close(statementError, null);
                                                                         }
                                                                     } catch (Exception e) {
-                                                                        e.printStackTrace();
-                                                                        kettleLog.logError(e + "");
+                                                                        if (!String.valueOf(e).contains("超出了允许的最大行值数")) {
+                                                                            e.printStackTrace();
+                                                                            kettleLog.logError(e + "");
+                                                                        }
+                                                                        if (String.valueOf(e).contains("超出了允许的最大行值数")) {
+                                                                            kettleLog.logBasic(e + "");
+                                                                        }
+
                                                                     }
 
                                                                     // 重置StringBuilder和batchSize。
@@ -374,8 +380,14 @@ public class SqlserverTransUtils {
                                     close(statementError, null);
                                 }
                             } catch (Exception e) {
-                                e.printStackTrace();
-                                kettleLog.logError(e + "");
+                                if (!String.valueOf(e).contains("超出了允许的最大行值数")) {
+                                    e.printStackTrace();
+                                    kettleLog.logError(e + "");
+                                }
+                                if (String.valueOf(e).contains("超出了允许的最大行值数")) {
+                                    kettleLog.logBasic(e + "");
+                                }
+
                             }
                         }
 
