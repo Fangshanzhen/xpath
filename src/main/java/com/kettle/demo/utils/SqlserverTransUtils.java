@@ -63,7 +63,7 @@ public class SqlserverTransUtils {
                 Statement statementTable = null;
                 ResultSet resultSetTable = null;
                 try {
-                    System.out.println("--------" + String.valueOf(connection.getHoldability() == ResultSet.HOLD_CURSORS_OVER_COMMIT));
+//                    System.out.println("--------" + String.valueOf(connection.getHoldability() == ResultSet.HOLD_CURSORS_OVER_COMMIT));
                     statementTable = connection.createStatement();
                     resultSetTable = statementTable.executeQuery(tableSql);
                     if (resultSetTable != null) {
@@ -299,7 +299,7 @@ public class SqlserverTransUtils {
                                                                             kettleLog.logError(e + "");
                                                                         }
                                                                         if (String.valueOf(e).contains("超出了允许的最大行值数")) {
-                                                                            kettleLog.logBasic(e + "");
+                                                                            kettleLog.logBasic("校验失败数据过多，sqlserver限制每次只能插入1000条数据  " + e);
                                                                         }
 
                                                                     }
@@ -385,7 +385,7 @@ public class SqlserverTransUtils {
                                     kettleLog.logError(e + "");
                                 }
                                 if (String.valueOf(e).contains("超出了允许的最大行值数")) {
-                                    kettleLog.logBasic(e + "");
+                                    kettleLog.logBasic("校验失败数据过多，sqlserver限制每次只能插入1000条数据  " + e);
                                 }
 
                             }
