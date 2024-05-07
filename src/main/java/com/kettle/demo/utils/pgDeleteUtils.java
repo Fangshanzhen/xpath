@@ -1,9 +1,11 @@
 package com.kettle.demo.utils;
 
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.google.common.collect.Lists;
 import com.kettle.demo.constant.Constant;
 import com.kettle.demo.response.kettleResponse;
 import com.kettle.demo.response.transformResponse;
@@ -17,24 +19,18 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 
-import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.toList;
 
+public class pgDeleteUtils {
 
-/**
- * 中间库为sqlserver数据库
- */
-
-public class SqlserverTransUtils {
-
-    public static String transformData(String databaseType, String baseUrl, String dbname, String schema, String ip, String port,
+    public static String deleteData(String databaseType, String baseUrl, String dbname, String schema, String ip, String port,
                                        String username, String password,
                                        String secret, String clientId, String num, String tableNameTest) throws Exception {  //dbname: postgres  schema:test
 
         LogChannelFactory logChannelFactory = new org.pentaho.di.core.logging.LogChannelFactory();
-        LogChannel kettleLog = logChannelFactory.create("上报数据");
+        LogChannel kettleLog = logChannelFactory.create("删除数据");
 
-        Connection connection = null;
+        Connection connection = null; //默认postgresql
         String s = null;
 
         try {
@@ -46,25 +42,25 @@ public class SqlserverTransUtils {
         }
 
         if (connection != null) {
-            connection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
             kettleLog.logBasic(databaseType + "数据库连接成功");
             try {
                 List<String> tableList = new ArrayList<>();
                 String tableSql = null;
                 String countSql = null;
                 String timeSql = null;
-                if (databaseType.equals("sqlserver")) {
-//                tableSql = Constant.tableSqlPostgreSql.replace("?", schema);
-                    tableSql = Constant.tableSqlsqlserver.replace("schemaname", schema);
-                    countSql = Constant.countsqlserverSql.replace("@", schema);
+                if (databaseType.equals("postgresql")) {
+                    tableSql = Constant.tableSqlPostgreSql1.replace("schemaname", schema);
+                    countSql = Constant.countSql.replace("@", schema);
                 }
-
-
+                if (databaseType.equals("oracle")) {
+                    tableSql = Constant.tablesqlOracle.replace("?", schema);
+                    tableSql = Constant.tableSqlOraclel1.replace("schemaname", schema);  // 哪些状态是1
+                    countSql = Constant.countOracleSql.replace("@", schema);
+                }
                 Statement statementTable = null;
                 ResultSet resultSetTable = null;
                 try {
-//                    System.out.println("--------" + String.valueOf(connection.getHoldability() == ResultSet.HOLD_CURSORS_OVER_COMMIT));
-                    statementTable = connection.createStatement();
+                    statementTable = executeSql(tableSql, connection);
                     resultSetTable = statementTable.executeQuery(tableSql);
                     if (resultSetTable != null) {
                         tableList = ResultSetUtils.allResultSet(resultSetTable);    //获取所有表名
@@ -73,12 +69,10 @@ public class SqlserverTransUtils {
                     close(statementTable, resultSetTable);
                 }
 
-
                 if (tableNameTest != null) {
                     tableList = Arrays.asList(tableNameTest.split(","));
                 }
 
-//                String accessToken = getToken(baseUrl, secret, clientId);
 //
                 //   ----------------每隔30分钟获取一次token，避免多次调用---------------------------
                 String accessToken = null;
@@ -86,7 +80,7 @@ public class SqlserverTransUtils {
                 ResultSet resultSetToken = null;
                 String tokenSql = "SELECT token  FROM  " + schema + ".token_time  ";
                 List<String> tokenList = null;
-                tokenTime = connection.createStatement();
+                tokenTime = executeSql(tokenSql, connection);
                 resultSetToken = tokenTime.executeQuery(tokenSql);
                 try {
                     if (resultSetToken != null) {
@@ -95,17 +89,17 @@ public class SqlserverTransUtils {
                     if (tokenList == null || (tokenList.size() == 0) || (tokenList.size() > 0 && tokenList.get(0) == null)
                             || (tokenList.size() > 0 && tokenList.get(0).equals("")) || (tokenList.size() > 0 && tokenList.get(0).equals("null"))) {
                         accessToken = getToken(baseUrl, secret, clientId);
-                        if (accessToken != null) {
+                        if(accessToken!=null) {
                             Date date = new Date();
                             long a = date.getTime() + 30 * 60 * 1000;  //30分钟
                             String sql = "UPDATE " + schema + ".token_time " + " SET token= " + "'" + accessToken + "'" + "  ,  token_time= " + a;
-                            tokenTime = connection.createStatement();
+                            tokenTime = executeSql(sql, connection);
                             tokenTime.execute(sql);
                         }
                     } else if (tokenList.size() > 0 && tokenList.get(0) != null && !tokenList.get(0).equals("null")) { //有token
                         tokenSql = "SELECT token_time  FROM  " + schema + ".token_time  ";
                         List<String> timeList = new ArrayList<>();
-                        tokenTime = connection.createStatement();
+                        tokenTime = executeSql(tokenSql, connection);
                         resultSetToken = tokenTime.executeQuery(tokenSql);
                         if (resultSetToken != null) {
                             timeList = ResultSetUtils1.allResultSet(resultSetToken);
@@ -121,7 +115,7 @@ public class SqlserverTransUtils {
                                 long a1 = date1.getTime() + 30 * 60 * 1000;
                                 String sql1 = "UPDATE " + schema + ".token_time  " + " SET token = " + "'" + accessToken + "'" + "  ,  token_time= " + a1;
 
-                                tokenTime = connection.createStatement();
+                                tokenTime = executeSql(sql1, connection);
                                 tokenTime.execute(sql1);
                             }
                         }
@@ -141,9 +135,7 @@ public class SqlserverTransUtils {
                 if (tableList != null && tableList.size() > 0) {
                     for (String s1 : tableList) {
 
-                        StringBuilder errorSqlAll = new StringBuilder("insert into  " + schema + ".error_log (tablename, id, success, errorlog, errortime) values");
-
-                        StringBuilder errorSqlAll1 = new StringBuilder("insert into  " + schema + ".error_log (tablename, id, success, errorlog, errortime) values");
+//                        StringBuilder errorSqlAll = new StringBuilder("insert into  " + schema + ".error_log (tablename, id, success, errorlog, errortime) values"); //针对妇幼医院postgresql，把错误信息写进数据库
 
                         Statement statementCommon;
                         List<Map<String, Object>> infoMaps = new ArrayList<>();
@@ -155,33 +147,48 @@ public class SqlserverTransUtils {
                         String updateSql1 = null;
                         String updateTableEndSql = null;
 
+                        if (databaseType.equals("postgresql")) {
+                            if (!s1.contains("old") && !s1.contains("etl") && !s1.contains("company") && !s1.contains("immu") && !s1.contains("postalcode")) {
+                                tableName = s1.split("@")[1];
+                                String schemaName = s1.split("@")[0];
+                                dataSql = (Constant.deleteSql + num).replace("tableName", schemaName + '.' + tableName);
+                                if (s1.contains("bdmpwh") || s1.contains("bdmsmi") || s1.contains("bdmoph") || s1.contains("bdmtdp") || s1.contains("emrhpi")) {
+                                    dataSql = (Constant.deleteSql + (Integer.valueOf(num) - 100)).replace("tableName", schemaName + '.' + tableName);
+                                }
+                                updateSql = "update  " + schemaName + '.' + tableName;
+                                updateSql1 = updateSql;
+                                updateTableEndSql = "update  " + schemaName + ".tablestatus   set  status = ";
+                            }
+                        }
+                        //ORACLE
+                        if (databaseType.equals("oracle")) {
+                            if (!s1.contains("_LOG") && !s1.contains("ETL") && !s1.contains("TABLE") && !s1.contains("SHIJIAN") && !s1.contains("postalcode")) {//HUAYIN@CBJCJB
+                                tableName = s1.split("@")[1];
+                                String owner = s1.split("@")[0];
+                                dataSql = (Constant.oracleDeleteSql + num).replace("tableName", owner + '.' + tableName);
+                                updateSql = "update  " + owner + '.' + tableName;
+                                updateTableEndSql = "update  " + owner + ".tablestatus   set  status = ";
+                                updateSql1 = updateSql;
 
-                        //sqlserver
-                        if (databaseType.equals("sqlserver")) {
-                            tableName = s1.split("@")[1];
-                            String schemaName = s1.split("@")[0];
-                            dataSql = (Constant.sqlserverSql).replace("tableName", schemaName + '.' + tableName).replace("number123", num);
-                            updateSql = "update  " + schemaName + '.' + tableName;
-                            updateSql1 = updateSql;
-                            updateTableEndSql = "update  " + schemaName + ".tablestatus   set  status = ";
+                            }
                         }
 
-                        if (dataSql != null) {
-                            statementCommon = connection.createStatement();
 
+
+                        if (dataSql != null) {
+                            statementCommon = executeSql(dataSql, connection);
                             ResultSet resultSet = statementCommon.executeQuery(dataSql);
-                            kettleLog.logBasic("当前传输表名为:  " + s1);
+                            kettleLog.logBasic("当前删除数据的表名为:  " + s1);
 
 
                             infoMaps = ResultSetUtils.allResultSetToJson(resultSet);
 
                             //新加已查完数据的处理 默认为1，已完成的标识为2，当所有的表传输完成后全部重置为1
                             if (infoMaps == null || infoMaps.size() == 0) {
-                                updateTableEndSql = updateTableEndSql + " 2  where tablename = '" + tableName + "'";   //sqlserver数据库注意tablename这个字段如果是text格式会报错，要改成varchar格式
-                                statementCommon = connection.createStatement();
+                                updateTableEndSql = updateTableEndSql + " 2  where tablename = '" + tableName + "'";
+                                statementCommon = executeSql(updateTableEndSql, connection);
                                 statementCommon.execute(updateTableEndSql);
                             }
-
 
                             transformMap.put("collection", tableName.toLowerCase());
                             transformMap.put("infoMaps", infoMaps);
@@ -201,7 +208,7 @@ public class SqlserverTransUtils {
                             kettleLog.logBasic("---查询数据库数据成功--- ");
                             allIds += idList.size();
 
-                            if (accessToken != null) {
+                            if (accessToken != null && infoMaps!=null) {
 
                                 Statement statementTime = null;
                                 ResultSet resultSetTime = null;
@@ -211,7 +218,7 @@ public class SqlserverTransUtils {
                                 SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                                 String startTime = formatter.format(date);
                                 try {
-                                    statementTime = connection.createStatement();
+                                    statementTime = executeSql(countSql, connection);
                                     resultSetTime = statementTime.executeQuery(countSql);
 
                                     startTimeList = ResultSetUtils.allResultSet(resultSetTime);
@@ -223,12 +230,12 @@ public class SqlserverTransUtils {
                                         typeMap.put("type", 1);  //1表示开始，2表示结束
                                         transformDataTime(baseUrl, typeMap, accessToken);   //调用开始或结束标志接口
                                         timeSql = "update " + schema + "." + "etl_count  set start_time ='" + startTime + "'";
-//                                    timeSql = "insert into " + schema + "." + "etl_count (start_time, end_time) values(' " + startTime + "'" + ", null)";
-                                        statementTime = connection.createStatement();
+                                        statementTime = executeSql(timeSql, connection);
                                         statementTime.execute(timeSql);
-                                        kettleLog.logBasic(" -----【数据上报开始时间为：】----" + startTime);
+                                        kettleLog.logBasic(" -----【数据删除开始时间为：】----" + startTime);
                                     }
-
+                                } catch (Exception e) {
+                                    kettleLog.logError(e + "");
                                 } finally {
                                     close(statementTime, resultSetTime);
                                 }
@@ -236,16 +243,10 @@ public class SqlserverTransUtils {
                                 transformResponse transformResponse = transform(baseUrl, accessToken, transformMap, secret, clientId);
                                 if (transformResponse != null) {
                                     JSONArray returnJsonObject = transformResponse.getJsonArray();
-//                                if(transformResponse.getCode()!=null){
-//                                    s=transformResponse.getCode().toString();
-//                                }
 
                                     if (returnJsonObject != null) {
                                         kettleLog.logBasic("---调用上传数据接口成功2--- ");
                                         List<String> returnIds = new ArrayList<>();
-
-                                        int batchSize = 0;
-
                                         if (idList.size() > 0 && returnJsonObject.size() > 0) {
                                             for (Object o : returnJsonObject) {
                                                 JSONObject jsonObject = (JSONObject) o;
@@ -253,105 +254,119 @@ public class SqlserverTransUtils {
                                                     returnIds.add((String) jsonObject.get("id"));
 
 
-                                                    //--------------加一段把错误数据日志写进数据库中，供医院修改------------------
-                                                    String errorSql = "  ( " + "'" + tableName + "'"; //tablename
-                                                    errorSql = errorSql + "," + "  '" + String.valueOf(jsonObject.get("id")) + "'"; //id
-                                                    errorSql = errorSql + "," + "  '" + String.valueOf(jsonObject.get("success")) + "'"; //success
-                                                    if (jsonObject.containsKey("errorLog")) {
-                                                        JSONObject errorLog = (JSONObject) jsonObject.get("errorLog");
-                                                        if (errorLog.containsKey("errorMsg")) {
-                                                            String errorMsg = String.valueOf(errorLog.get("errorMsg"));
-                                                            if (errorMsg != null && !errorMsg.equals("")) {
-                                                                errorSql = errorSql + "," + "  '" + errorMsg + "'"; //errorLog
-                                                                Date errordate = new Date();
-                                                                SimpleDateFormat formatterError = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                                                                String dateError = formatterError.format(errordate);
-                                                                errorSql = errorSql + "," + "  '" + dateError + "'" + ")"; //errorLog
-                                                                errorSqlAll.append(errorSql);
-
-                                                                if (!returnJsonObject.get(returnJsonObject.size() - 1).equals(o)) {
-                                                                    errorSqlAll.append(",");//除去最后一个，其余都加,
-                                                                }
-
-                                                                batchSize = batchSize + 1;
-
-
-                                                                if (batchSize >= 800) {
-                                                                    if (errorSqlAll.toString().endsWith(",")) {
-                                                                        String s11 = errorSqlAll.toString().substring(0, errorSqlAll.toString().length() - 1);
-                                                                        errorSqlAll = new StringBuilder(s11);
-                                                                    }
-
-                                                                    // 执行 SQL
-                                                                    errorSqlAll.append(";");
-
-                                                                    try {
-                                                                        if (errorSqlAll.toString().contains(tableName)) { //
-                                                                            Statement statementError = connection.createStatement();
-                                                                            statementError.execute(errorSqlAll.toString());
-//                                                                            kettleLog.logBasic("errorSqlAll0000000*********"+errorSqlAll);
-
-                                                                            close(statementError, null);
-                                                                        }
-                                                                    } catch (Exception e) {
-                                                                        if (!String.valueOf(e).contains("超出了允许的最大行值数") && !String.valueOf(e).contains("1000 行值的最大允许值")) {
-                                                                            e.printStackTrace();
-                                                                            kettleLog.logError(e + "");
-                                                                        }
-                                                                        if (String.valueOf(e).contains("超出了允许的最大行值数") || String.valueOf(e).contains("1000 行值的最大允许值")) {
-                                                                            kettleLog.logBasic("校验失败数据过多，sqlserver限制每次只能插入1000条数据  " + e);
-                                                                        }
-
-                                                                    }
-
-                                                                    // 重置StringBuilder和batchSize。
-                                                                    errorSqlAll = errorSqlAll1;
-                                                                    batchSize = 0;
-                                                                }
-
-
-                                                            }
-                                                        }
-                                                    }
+//                                                    //--------------加一段把错误数据日志写进数据库中，供医院修改------------------
+//                                                    String errorSql = "  ( " + "'" + tableName + "'"; //tablename
+//                                                    errorSql = errorSql + "," + "  '" + String.valueOf(jsonObject.get("id")) + "'"; //id
+//                                                    errorSql = errorSql + "," + "  '" + String.valueOf(jsonObject.get("success")) + "'"; //success
+//                                                    if (jsonObject.containsKey("errorLog")) {
+//                                                        JSONObject errorLog = (JSONObject) jsonObject.get("errorLog");
+//                                                        if (errorLog.containsKey("errorMsg")) {
+//                                                            String errorMsg = String.valueOf(errorLog.get("errorMsg"));
+//                                                            if (errorMsg != null && !errorMsg.equals("")) {
+//                                                                errorSql = errorSql + "," + "  '" + errorMsg + "'"; //errorLog
+//                                                                Date errordate = new Date();
+//                                                                SimpleDateFormat formatterError = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//                                                                String dateError = formatterError.format(errordate);
+//                                                                errorSql = errorSql + "," + "  '" + dateError + "'" + ")"; //errortime
+//                                                                errorSqlAll.append(errorSql);
+//                                                                if (!returnJsonObject.get(returnJsonObject.size() - 1).equals(o)) {
+//                                                                    errorSqlAll.append(",");//除去最后一个，其余都加,
+//                                                                }
+//                                                            }
+//                                                        }
+//                                                    }
                                                 }
                                             }
 
                                         }
                                         idList = idList.stream().filter(item -> !returnIds.contains(item)).collect(toList());   //去除未通过校验数据的id
 
-                                        if (idList.size() > 0) {
-
-                                            successNumbers += idList.size();
-
-                                            String newIdList = "'" + StringUtils.join(idList, "','") + "'";  //加上单引号
-                                            updateSql = updateSql + " set sjtbzt = 1 " + "where dataid in (" + newIdList + " )";
-//                                            kettleLog.logBasic("updateSql---------------"+updateSql);
-
-                                            try {
-                                                statementCommon = connection.createStatement();
-                                                statementCommon.execute(updateSql);
-                                                kettleLog.logBasic("---更新数据同步成功状态-- ");
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                                kettleLog.logError(e + "");
+                                        if (databaseType.equals("postgresql")) {
+                                            if (idList.size() > 0) {
+                                                successNumbers += idList.size();
+                                                String newIdList = "'" + StringUtils.join(idList, "','") + "'";  //加上单引号
+                                                updateSql = updateSql + " set sjtbzt = -2 " + "where dataid in (" + newIdList + " )";
+                                                try {
+                                                    statementCommon = executeSql(updateSql, connection);
+                                                    statementCommon.execute(updateSql);
+                                                    kettleLog.logBasic("---更新数据【删除成功】状态-- ");
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
+                                                    kettleLog.logError(e + "");
+                                                }
+                                            }
+                                            if (returnIds.size() > 0) {
+                                                errorNumbers += returnIds.size();
+                                                String errorIdList = "'" + StringUtils.join(returnIds, "','") + "'";
+                                                String errorDataSql = updateSql1 + " set sjtbzt = -3 " + "where dataid in (" + errorIdList + " )";
+                                                try {
+                                                    statementCommon = executeSql(errorDataSql, connection);
+                                                    statementCommon.execute(errorDataSql);
+                                                    kettleLog.logBasic("---更新数据【删除失败】状态-- ");
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
+                                                    kettleLog.logError(e + "");
+                                                }
                                             }
                                         }
-                                        if (returnIds.size() > 0) {
-
-                                            errorNumbers += returnIds.size();
-                                            String errorIdList = "'" + StringUtils.join(returnIds, "','") + "'";
-                                            String errorDataSql = updateSql1 + " set sjtbzt = 2 " + "where dataid in (" + errorIdList + " )";
 
 
-                                            try {
-                                                statementCommon = connection.createStatement();
-                                                statementCommon.execute(errorDataSql);
-                                                kettleLog.logBasic("---更新数据同步失败状态-- ");
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                                kettleLog.logError(e + "");
+                                        if (databaseType.equals("oracle")) {
+                                            if (idList.size() > 0) {
+                                                successNumbers += idList.size();
+                                                if (idList.size() < 1000) { //oracle IN 中的数据量不能超过 1000 条
+                                                    String newIdList = "'" + StringUtils.join(idList, "','") + "'";  //加上单引号
+                                                    updateSql = updateSql + " set sjtbzt = -2 " + "where dataid in (" + newIdList + " )";
+                                                } else {
+                                                    List<List<String>> parts = Lists.partition(idList, 900); //以900个id分为一组
+                                                    for (int i = 0; i < parts.size(); i++) {
+
+                                                        String newIdList = "'" + StringUtils.join(parts.get(i), "','") + "'";  //加上单引号
+                                                        if (i == 0) {
+                                                            updateSql = updateSql + " set sjtbzt = -2  " + "where dataid in  " + "(" + newIdList + " )";
+                                                        } else {
+                                                            updateSql = updateSql + "  or dataid in  " + "(" + newIdList + " )";
+                                                        }
+                                                    }
+                                                }
+                                                try {
+                                                    statementCommon = executeSql(updateSql, connection);
+                                                    statementCommon.execute(updateSql);
+                                                    kettleLog.logBasic("---更新数据【删除成功】状态-- ");
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                            if (returnIds.size() > 0) {
+
+                                                errorNumbers += returnIds.size();
+                                                String errorDataSql = updateSql1;
+                                                if (returnIds.size() < 1000) {
+                                                    String errorIdList = "'" + StringUtils.join(returnIds, "','") + "'";
+                                                    errorDataSql = errorDataSql + " set sjtbzt = -3 " + "where dataid in (" + errorIdList + " )";
+                                                } else {
+                                                    List<List<String>> parts = Lists.partition(returnIds, 900);
+                                                    for (int i = 0; i < parts.size(); i++) {
+                                                        String errorIdList = "'" + StringUtils.join(parts.get(i), "','") + "'";  //加上单引号
+                                                        if (i == 0) {
+                                                            errorDataSql = errorDataSql + " set sjtbzt = -3 " + "where dataid in  " + "(" + errorIdList + " )";
+                                                        } else {
+                                                            errorDataSql = errorDataSql + "  or dataid in  " + "(" + errorIdList + " )";
+                                                        }
+
+                                                    }
+                                                }
+                                                try {
+                                                    statementCommon = executeSql(errorDataSql, connection);
+                                                    statementCommon.execute(errorDataSql);
+                                                    kettleLog.logBasic("---更新数据【删除失败】状态--");
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
+                                                }
                                             }
                                         }
+
+
 
                                     }
                                 }
@@ -362,43 +377,27 @@ public class SqlserverTransUtils {
 
                             close(statementCommon, resultSet);
                         }
-
-                        if (errorSqlAll.toString().length() > 0) {
-                            if (errorSqlAll.toString().endsWith(",")) {
-                                String s11 = errorSqlAll.toString().substring(0, errorSqlAll.toString().length() - 1);
-                                errorSqlAll = new StringBuilder(s11);
-                            }
-                            // 执行 SQL
-                            errorSqlAll.append(";");
-
-//                            kettleLog.logBasic("errorSqlAll11111*********"+errorSqlAll);
-
-                            try {
-                                if (errorSqlAll.toString().contains(tableName)) { //
-                                    Statement statementError = connection.createStatement();
-                                    statementError.execute(errorSqlAll.toString());
-                                    close(statementError, null);
-                                }
-                            } catch (Exception e) {
-                                if (!String.valueOf(e).contains("超出了允许的最大行值数") && !String.valueOf(e).contains("1000 行值的最大允许值")) {
-                                    e.printStackTrace();
-                                    kettleLog.logError(e + "");
-                                }
-                                if (String.valueOf(e).contains("超出了允许的最大行值数") || String.valueOf(e).contains("1000 行值的最大允许值")) {
-                                    kettleLog.logBasic("校验失败数据过多，sqlserver限制每次只能插入1000条数据  " + e);
-                                }
-
-                            }
-                        }
-
-                        kettleLog.logBasic(s1 + "----------------------success");
+//                        errorSqlAll.append(";");
+//
+//                        try {
+//                            if (errorSqlAll.toString().contains(tableName)) { //
+////                                    kettleLog.logBasic("errorSqlAll  " + errorSqlAll);
+//                                Statement statementError = executeSql(errorSqlAll.toString(), connection);
+//                                statementError.execute(errorSqlAll.toString());
+//                                close(statementError, null);
+//                            }
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                            kettleLog.logError(e + "");
+//                        }
+////                        }
 
                     }
                 }
                 Date date = new Date();
                 SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String startTime = formatter.format(date);
-                kettleLog.logBasic(" 本次上报数据时间为：" + startTime + "--- 上报成功数据总数：" + successNumbers + "    ----上报失败数据总数：" + errorNumbers); //本地测试需要注释掉
+                kettleLog.logBasic(" 本次数据删除时间为：" + startTime + "--- 删除成功数据总数：" + successNumbers + "    ----删除失败数据总数：" + errorNumbers); //本地测试需要注释掉
 
 
                 Statement statementTime1 = null;
@@ -406,7 +405,7 @@ public class SqlserverTransUtils {
                 ResultSet resultSetTime1 = null;
                 List<String> startTimeList1 = new ArrayList<>();
                 try {
-                    statementTime1 = connection.createStatement();
+                    statementTime1 = executeSql(countSql, connection);
                     resultSetTime1 = statementTime1.executeQuery(countSql);
 
                     startTimeList1 = ResultSetUtils.allResultSet(resultSetTime1);
@@ -415,16 +414,16 @@ public class SqlserverTransUtils {
                             Date date1 = new Date();
                             SimpleDateFormat formatter1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                             String endTime = formatter1.format(date1);
-                            //调用数据结束时间接口
-                            Map<String, Object> typeMap = new HashMap<>();
-                            typeMap.put("type", 2);
-                            transformDataTime(baseUrl, typeMap, accessToken);
-                            kettleLog.logBasic(" -----【数据上报结束时间为：】----" + endTime);
+//                            //调用数据结束时间接口
+//                            Map<String, Object> typeMap = new HashMap<>();
+//                            typeMap.put("type", 2);
+//                            transformDataTime(baseUrl, typeMap, accessToken);
+                            kettleLog.logBasic(" -----【数据删除结束时间为：】----" + endTime);
                             timeSql = "update " + schema + "." + "etl_count  set start_time =null";
                             String updateTableEndSql = "update  " + schema + ".tablestatus   set  status = 1";  //状态全部置为1
-                            statementTime1 = connection.createStatement();
+                            statementTime1 = executeSql(timeSql, connection);
                             statementTime1.execute(timeSql);
-                            statementTime2 = connection.createStatement();
+                            statementTime2 = executeSql(updateTableEndSql, connection);
                             statementTime2.execute(updateTableEndSql);
                             s = "2";   //如果结束传输，s置为2，利用数据校验插件终止kettle循环任务
                         }
@@ -432,9 +431,9 @@ public class SqlserverTransUtils {
                     }
                     if (allIds == 0 && (startTimeList1 == null || startTimeList1.get(0) == null)) { //无起始时间，且无数据直接结束 防止一直死循环
                         String updateTableEndSql = "update  " + schema + ".tablestatus   set  status = 1";  //状态全部置为1
-                        statementTime2 = connection.createStatement();
+                        statementTime2 = executeSql(updateTableEndSql, connection);
                         statementTime2.execute(updateTableEndSql);
-                        kettleLog.logBasic("无新数据上报，结束上报任务！");
+                        kettleLog.logBasic("无数据删除，结束删除任务！");
                         return "2";
                     }
 
@@ -567,15 +566,14 @@ public class SqlserverTransUtils {
 
     }
 
-//
-//    private static Statement executeSql(String sql, Connection connection) throws Exception {
-//        Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY,
-//                ResultSet.CLOSE_CURSORS_AT_COMMIT);
-//        statement.setQueryTimeout(6000);
-//        statement.setFetchSize(100000);
-//        statement.setEscapeProcessing(false);
-//        return statement;
-//    }
+
+    private static Statement executeSql(String sql, Connection connection) throws Exception {
+        Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        statement.setQueryTimeout(6000);
+        statement.setFetchSize(100000);
+        statement.setEscapeProcessing(false);
+        return statement;
+    }
 
     private static void close(Statement statement, ResultSet resultSet) throws SQLException {
         if (resultSet != null) {
@@ -589,5 +587,6 @@ public class SqlserverTransUtils {
 
 
 }
+
 
 

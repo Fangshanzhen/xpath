@@ -31,7 +31,6 @@ public class test1127 {
         String token = getToken(authUrl, secret, clientId);
 
 
-
         Map<String, Object> transformMap = new HashMap<>();
         transformMap.put("idType", "01");
         transformMap.put("idCard", "610502198808300656");

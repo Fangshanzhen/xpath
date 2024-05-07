@@ -10,6 +10,10 @@ import java.util.Base64;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+/**
+ * 用Java实现数据调用测试（返回页面的形式）
+ */
+
 public class xmlTest {
 
     public static void main(String[] args) throws Exception {
@@ -19,14 +23,20 @@ public class xmlTest {
         Instant instant = Instant.now();
         // 使用java.time.Instant获取当前时间戳（毫秒）
         long timestampMillis = instant.toEpochMilli();
-        System.out.println(timestampMillis);
 
-        String s = "clientId=q_client14&idCard=142702199206160013&idType=01&nonce=BD20240312152605&secret=be0a8a45217a41d08964c7b00fc6fa0c&timestamp=" + timestampMillis;
+
+
+
+
+        System.out.println("时间戳："+timestampMillis);
+
+        String s = "clientId=q_client15&idCard=610102194911042712&idType=01&nonce=f6e8ecf7ee9145d8&secret=b9978f7c0ee5480bb432a5b7ba1b2827&timestamp=" + timestampMillis;
         String s1 = sha1(s);
+
         // The string you want to encrypt
-        String data = "{\"info\":{\"clientId\":\"q_client14\",\"secret\":\"be0a8a45217a41d08964c7b00fc6fa0c\",\"idType\":\"01\",\"idCard\":\"142702199206160013\"},\"timestamp\":\"#\",\"nonce\":\"BD20240312152605\",\"signature\":\"@\"}"
-        .replace("#",String.valueOf(timestampMillis))
-                .replace("@",s1);
+        String data = "{\"info\":{\"clientId\":\"q_client15\",\"secret\":\"b9978f7c0ee5480bb432a5b7ba1b2827\",\"idType\":\"01\",\"idCard\":\"610102194911042712\"},\"timestamp\":\"#\",\"nonce\":\"f6e8ecf7ee9145d8\",\"signature\":\"@\"}"
+                .replace("#", String.valueOf(timestampMillis))
+                .replace("@", s1);
         System.out.println(data);
 
 
@@ -37,7 +47,7 @@ public class xmlTest {
 
         // Encode the encrypted data to Base64
         String base64EncodedEncryptedData = Base64.getEncoder().encodeToString(encryptedData);
-        System.out.println("--------" + base64EncodedEncryptedData);
+        System.out.println("生成code:  " + base64EncodedEncryptedData);
     }
 
     private static String sha1(String s) {
@@ -55,9 +65,8 @@ public class xmlTest {
                 if (hex.length() == 1) hexString.append('0');
                 hexString.append(hex);
             }
-
             // Print out the SHA1 hash
-            System.out.println("SHA1 hash of the string is: " + hexString.toString());
+            System.out.println("SHA1加密后: " + hexString.toString());
             return hexString.toString();
 
         } catch (NoSuchAlgorithmException e) {

@@ -17,7 +17,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 
-import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.toList;
 
 
@@ -61,6 +60,7 @@ public class TransformDataUtils {
                     tableSql = Constant.tablesqlMysql.replace("?", schema);
                     tableSql = Constant.tableSqlPostgreSql1.replace("schemaname", schema);
                 }
+
 
                 Statement statementTable = null;
                 ResultSet resultSetTable = null;
