@@ -49,9 +49,9 @@ public class Constant {
     public final static String tableSqlmysql = "select concat ('schemaname' ,'@', tablename )  from schemaname.tablestatus where status=1 ";
 
 
-
+    //删除数据
     public final static String deleteSql = "select * from tableName where  dataid is not null and  patientid is not null and patientid !='未采集' and patientid !='-'  and patientid !='888888888888888888'   " +
-            " and  sjtbzt =-1    limit "; //删除数据
+            " and  sjtbzt =-1    limit ";
     public final static String oracleDeleteSql = "select * from tableName  where sjtbzt=-1 and  dataid is not null and   rownum <=    " ;
 
     public final static String sqlserveDeleterSql = "select top number123 * from tableName  where sjtbzt=-1   " ;

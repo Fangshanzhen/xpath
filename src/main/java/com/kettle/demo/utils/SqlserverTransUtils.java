@@ -20,7 +20,7 @@ import java.util.Date;
 import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.toList;
 
-
+//
 /**
  * 中间库为sqlserver数据库
  */
@@ -289,7 +289,9 @@ public class SqlserverTransUtils {
                                                                         if (errorSqlAll.toString().contains(tableName)) { //
                                                                             Statement statementError = connection.createStatement();
                                                                             statementError.execute(errorSqlAll.toString());
-//                                                                            kettleLog.logBasic("errorSqlAll0000000*********"+errorSqlAll);
+//                                                                            if(tableName.contains("emrfcr")) {
+//                                                                                kettleLog.logBasic("errorSqlAll0000000*********" + errorSqlAll);
+//                                                                            }
 
                                                                             close(statementError, null);
                                                                         }
@@ -352,7 +354,7 @@ public class SqlserverTransUtils {
                                                 kettleLog.logError(e + "");
                                             }
                                         }
-
+                                        kettleLog.logBasic(s1 + "----------------------success");
                                     }
                                 }
 
@@ -391,7 +393,6 @@ public class SqlserverTransUtils {
                             }
                         }
 
-                        kettleLog.logBasic(s1 + "----------------------success");
 
                     }
                 }
@@ -499,7 +500,7 @@ public class SqlserverTransUtils {
 
         LogChannelFactory logChannelFactory = new org.pentaho.di.core.logging.LogChannelFactory();
         LogChannel kettleLog = logChannelFactory.create("获取token");
-        String TokenUrl = baseUrl + "/auth/auth/token?secret=" + secret + "&clientId=" + clientId;
+        String TokenUrl = baseUrl + "/auth/auth/token?secret=" + secret + "&clientId=" + clientId; //
 //        kettleLog.logBasic("TokenUrl  " + TokenUrl);
         kettleResponse kettleResponse = null;  //获取token接口
         try {

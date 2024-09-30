@@ -12,8 +12,8 @@ public class JDBCUtils {
     //jdbc:mysql://localhost:3306/test
     private static String POSTGRESQLURL = "jdbc:postgresql://ip:port/dbname?searchpath=schema";
     //jdbc:postgresql://localhost:5432/postgres?searchpath=test
-//    private static String ORACLEURL = "jdbc:oracle:thin:@ip:port/dbname";   //jdbc:oracle:thin:@ip:port/dbname 使用的是Service Name方式来指定数据库
-    private static String ORACLEURL = "jdbc:oracle:thin:@ip:port:dbname"; //jdbc:oracle:thin:@ip:port:dbname 使用的是SID方式来指定数据库。
+    private static String ORACLEURL = "jdbc:oracle:thin:@ip:port/dbname";   //jdbc:oracle:thin:@ip:port/dbname 使用的是Service Name方式来指定数据库
+//    private static String ORACLEURL = "jdbc:oracle:thin:@ip:port:dbname"; //jdbc:oracle:thin:@ip:port:dbname 使用的是SID方式来指定数据库。
     //jdbc:oracle:thin:@10.0.108.21:1521:jyk
 
     private static String SQLSERVERURL = "jdbc:sqlserver://ip:port;databaseName=dbname";

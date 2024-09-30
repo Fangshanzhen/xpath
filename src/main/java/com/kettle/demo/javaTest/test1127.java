@@ -24,8 +24,8 @@ import static com.kettle.demo.javaTest.diaoyong.getToken;
 public class test1127 {
     public static void main(String[] args) throws IOException {
 
-        String secret = "j9q8t5r3b6n7a4l2k0y1v9x8m5c3p7s2";
-        String clientId = "q_client41";
+        String secret = "8fcf8e0c97244b23aa029342dcea92a5";
+        String clientId = "q_client25";
         String authUrl = "https://weinan.wit-health.net/api-gate/";
         String infoUrl = "https://weinan.wit-health.net/api-gate/ehr/ehr/access";
         String token = getToken(authUrl, secret, clientId);
@@ -33,7 +33,7 @@ public class test1127 {
 
         Map<String, Object> transformMap = new HashMap<>();
         transformMap.put("idType", "01");
-        transformMap.put("idCard", "610502198808300656");
+        transformMap.put("idCard", "610202195005243213");
         transformMap.put("database", "dzbl");
         List<String> list = Arrays.asList("emrpif", "emrhif");
         transformMap.put("tables", list);

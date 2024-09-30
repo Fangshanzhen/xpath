@@ -30,11 +30,11 @@ public class xmlTest {
 
         System.out.println("时间戳："+timestampMillis);
 
-        String s = "clientId=q_client15&idCard=610102194911042712&idType=01&nonce=f6e8ecf7ee9145d8&secret=b9978f7c0ee5480bb432a5b7ba1b2827&timestamp=" + timestampMillis;
+        String s = "clientId=q_client25&idCard=610202195005243213&idType=01&nonce=1234567890123456&secret=8fcf8e0c97244b23aa029342dcea92a5&timestamp=" + timestampMillis;
         String s1 = sha1(s);
 
         // The string you want to encrypt
-        String data = "{\"info\":{\"clientId\":\"q_client15\",\"secret\":\"b9978f7c0ee5480bb432a5b7ba1b2827\",\"idType\":\"01\",\"idCard\":\"610102194911042712\"},\"timestamp\":\"#\",\"nonce\":\"f6e8ecf7ee9145d8\",\"signature\":\"@\"}"
+        String data = "{\"info\":{\"clientId\":\"q_client25\",\"secret\":\"8fcf8e0c97244b23aa029342dcea92a5\",\"idType\":\"01\",\"idCard\":\"610202195005243213\"},\"timestamp\":\"#\",\"nonce\":\"1234567890123456\",\"signature\":\"@\"}"
                 .replace("#", String.valueOf(timestampMillis))
                 .replace("@", s1);
         System.out.println(data);

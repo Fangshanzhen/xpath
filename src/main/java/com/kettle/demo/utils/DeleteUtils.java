@@ -21,11 +21,15 @@ import java.util.Date;
 
 import static java.util.stream.Collectors.toList;
 
-public class pgDeleteUtils {
+/**
+ * 渭南平台 当sjtbzt为-1时进行删除操作，调用删除接口，删除成功更新为-2
+ */
+
+public class DeleteUtils {
 
     public static String deleteData(String databaseType, String baseUrl, String dbname, String schema, String ip, String port,
-                                       String username, String password,
-                                       String secret, String clientId, String num, String tableNameTest) throws Exception {  //dbname: postgres  schema:test
+                                    String username, String password,
+                                    String secret, String clientId, String num, String tableNameTest) throws Exception {  //dbname: postgres  schema:test
 
         LogChannelFactory logChannelFactory = new org.pentaho.di.core.logging.LogChannelFactory();
         LogChannel kettleLog = logChannelFactory.create("删除数据");
@@ -57,6 +61,16 @@ public class pgDeleteUtils {
                     tableSql = Constant.tableSqlOraclel1.replace("schemaname", schema);  // 哪些状态是1
                     countSql = Constant.countOracleSql.replace("@", schema);
                 }
+                if (databaseType.equals("sqlserver")) {
+//                tableSql = Constant.tableSqlPostgreSql.replace("?", schema);
+                    tableSql = Constant.tableSqlsqlserver.replace("schemaname", schema);
+                    countSql = Constant.countsqlserverSql.replace("@", schema);
+                }
+                if (databaseType.equals("mysql")) {
+                    tableSql = Constant.tableSqlmysql.replace("schemaname", schema);
+                    countSql = Constant.countSql.replace("@", schema);
+                }
+
                 Statement statementTable = null;
                 ResultSet resultSetTable = null;
                 try {
@@ -89,7 +103,7 @@ public class pgDeleteUtils {
                     if (tokenList == null || (tokenList.size() == 0) || (tokenList.size() > 0 && tokenList.get(0) == null)
                             || (tokenList.size() > 0 && tokenList.get(0).equals("")) || (tokenList.size() > 0 && tokenList.get(0).equals("null"))) {
                         accessToken = getToken(baseUrl, secret, clientId);
-                        if(accessToken!=null) {
+                        if (accessToken != null) {
                             Date date = new Date();
                             long a = date.getTime() + 30 * 60 * 1000;  //30分钟
                             String sql = "UPDATE " + schema + ".token_time " + " SET token= " + "'" + accessToken + "'" + "  ,  token_time= " + a;
@@ -135,8 +149,6 @@ public class pgDeleteUtils {
                 if (tableList != null && tableList.size() > 0) {
                     for (String s1 : tableList) {
 
-//                        StringBuilder errorSqlAll = new StringBuilder("insert into  " + schema + ".error_log (tablename, id, success, errorlog, errortime) values"); //针对妇幼医院postgresql，把错误信息写进数据库
-
                         Statement statementCommon;
                         List<Map<String, Object>> infoMaps = new ArrayList<>();
 
@@ -146,8 +158,8 @@ public class pgDeleteUtils {
                         String updateSql = null;
                         String updateSql1 = null;
                         String updateTableEndSql = null;
-
-                        if (databaseType.equals("postgresql")) {
+                        //postgresql
+                        if (databaseType.equals("postgresql") || databaseType.equals("mysql") ) {
                             if (!s1.contains("old") && !s1.contains("etl") && !s1.contains("company") && !s1.contains("immu") && !s1.contains("postalcode")) {
                                 tableName = s1.split("@")[1];
                                 String schemaName = s1.split("@")[0];
@@ -160,26 +172,33 @@ public class pgDeleteUtils {
                                 updateTableEndSql = "update  " + schemaName + ".tablestatus   set  status = ";
                             }
                         }
-                        //ORACLE
+                        //oracle
                         if (databaseType.equals("oracle")) {
                             if (!s1.contains("_LOG") && !s1.contains("ETL") && !s1.contains("TABLE") && !s1.contains("SHIJIAN") && !s1.contains("postalcode")) {//HUAYIN@CBJCJB
                                 tableName = s1.split("@")[1];
                                 String owner = s1.split("@")[0];
                                 dataSql = (Constant.oracleDeleteSql + num).replace("tableName", owner + '.' + tableName);
                                 updateSql = "update  " + owner + '.' + tableName;
-                                updateTableEndSql = "update  " + owner + ".tablestatus   set  status = ";
                                 updateSql1 = updateSql;
+                                updateTableEndSql = "update  " + owner + ".tablestatus   set  status = ";
 
                             }
                         }
-
+                        //sqlserver
+                        if (databaseType.equals("sqlserver")) {
+                            tableName = s1.split("@")[1];
+                            String schemaName = s1.split("@")[0];
+                            dataSql = (Constant.sqlserveDeleterSql).replace("tableName", schemaName + '.' + tableName).replace("number123", num);
+                            updateSql = "update  " + schemaName + '.' + tableName;
+                            updateSql1 = updateSql;
+                            updateTableEndSql = "update  " + schemaName + ".tablestatus   set  status = ";
+                        }
 
 
                         if (dataSql != null) {
                             statementCommon = executeSql(dataSql, connection);
                             ResultSet resultSet = statementCommon.executeQuery(dataSql);
                             kettleLog.logBasic("当前删除数据的表名为:  " + s1);
-
 
                             infoMaps = ResultSetUtils.allResultSetToJson(resultSet);
 
@@ -208,7 +227,7 @@ public class pgDeleteUtils {
                             kettleLog.logBasic("---查询数据库数据成功--- ");
                             allIds += idList.size();
 
-                            if (accessToken != null && infoMaps!=null) {
+                            if (accessToken != null && infoMaps != null) {
 
                                 Statement statementTime = null;
                                 ResultSet resultSetTime = null;
@@ -245,7 +264,7 @@ public class pgDeleteUtils {
                                     JSONArray returnJsonObject = transformResponse.getJsonArray();
 
                                     if (returnJsonObject != null) {
-                                        kettleLog.logBasic("---调用上传数据接口成功2--- ");
+                                        kettleLog.logBasic("---调用删除数据接口成功2--- ");
                                         List<String> returnIds = new ArrayList<>();
                                         if (idList.size() > 0 && returnJsonObject.size() > 0) {
                                             for (Object o : returnJsonObject) {
@@ -253,35 +272,13 @@ public class pgDeleteUtils {
                                                 if (jsonObject.containsKey("id")) {
                                                     returnIds.add((String) jsonObject.get("id"));
 
-
-//                                                    //--------------加一段把错误数据日志写进数据库中，供医院修改------------------
-//                                                    String errorSql = "  ( " + "'" + tableName + "'"; //tablename
-//                                                    errorSql = errorSql + "," + "  '" + String.valueOf(jsonObject.get("id")) + "'"; //id
-//                                                    errorSql = errorSql + "," + "  '" + String.valueOf(jsonObject.get("success")) + "'"; //success
-//                                                    if (jsonObject.containsKey("errorLog")) {
-//                                                        JSONObject errorLog = (JSONObject) jsonObject.get("errorLog");
-//                                                        if (errorLog.containsKey("errorMsg")) {
-//                                                            String errorMsg = String.valueOf(errorLog.get("errorMsg"));
-//                                                            if (errorMsg != null && !errorMsg.equals("")) {
-//                                                                errorSql = errorSql + "," + "  '" + errorMsg + "'"; //errorLog
-//                                                                Date errordate = new Date();
-//                                                                SimpleDateFormat formatterError = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//                                                                String dateError = formatterError.format(errordate);
-//                                                                errorSql = errorSql + "," + "  '" + dateError + "'" + ")"; //errortime
-//                                                                errorSqlAll.append(errorSql);
-//                                                                if (!returnJsonObject.get(returnJsonObject.size() - 1).equals(o)) {
-//                                                                    errorSqlAll.append(",");//除去最后一个，其余都加,
-//                                                                }
-//                                                            }
-//                                                        }
-//                                                    }
                                                 }
                                             }
 
                                         }
                                         idList = idList.stream().filter(item -> !returnIds.contains(item)).collect(toList());   //去除未通过校验数据的id
 
-                                        if (databaseType.equals("postgresql")) {
+                                        if (!databaseType.equals("oracle")) {     //删除成功为-2
                                             if (idList.size() > 0) {
                                                 successNumbers += idList.size();
                                                 String newIdList = "'" + StringUtils.join(idList, "','") + "'";  //加上单引号
@@ -300,9 +297,10 @@ public class pgDeleteUtils {
                                                 String errorIdList = "'" + StringUtils.join(returnIds, "','") + "'";
                                                 String errorDataSql = updateSql1 + " set sjtbzt = -3 " + "where dataid in (" + errorIdList + " )";
                                                 try {
-                                                    statementCommon = executeSql(errorDataSql, connection);
-                                                    statementCommon.execute(errorDataSql);
-                                                    kettleLog.logBasic("---更新数据【删除失败】状态-- ");
+//                                                    statementCommon = executeSql(errorDataSql, connection);
+//                                                    statementCommon.execute(errorDataSql);
+//                                                    kettleLog.logBasic("---更新数据【删除失败】状态-- ");
+                                                    kettleLog.logBasic("---【删除失败】-- 失败条数：" + returnIds.size());
                                                 } catch (Exception e) {
                                                     e.printStackTrace();
                                                     kettleLog.logError(e + "");
@@ -318,7 +316,7 @@ public class pgDeleteUtils {
                                                     String newIdList = "'" + StringUtils.join(idList, "','") + "'";  //加上单引号
                                                     updateSql = updateSql + " set sjtbzt = -2 " + "where dataid in (" + newIdList + " )";
                                                 } else {
-                                                    List<List<String>> parts = Lists.partition(idList, 900); //以900个id分为一组
+                                                    List<List<String>> parts = Lists.partition(idList, 900); //   以900个id分为一组
                                                     for (int i = 0; i < parts.size(); i++) {
 
                                                         String newIdList = "'" + StringUtils.join(parts.get(i), "','") + "'";  //加上单引号
@@ -357,9 +355,10 @@ public class pgDeleteUtils {
                                                     }
                                                 }
                                                 try {
-                                                    statementCommon = executeSql(errorDataSql, connection);
-                                                    statementCommon.execute(errorDataSql);
-                                                    kettleLog.logBasic("---更新数据【删除失败】状态--");
+//                                                    statementCommon = executeSql(errorDataSql, connection);
+//                                                    statementCommon.execute(errorDataSql);
+//                                                    kettleLog.logBasic("---更新数据【删除失败】状态--");
+                                                    kettleLog.logBasic("---【删除失败】-- 失败条数：" + returnIds.size());
                                                 } catch (Exception e) {
                                                     e.printStackTrace();
                                                 }
@@ -367,30 +366,15 @@ public class pgDeleteUtils {
                                         }
 
 
-
                                     }
                                 }
-
 
                             }
 
 
                             close(statementCommon, resultSet);
                         }
-//                        errorSqlAll.append(";");
-//
-//                        try {
-//                            if (errorSqlAll.toString().contains(tableName)) { //
-////                                    kettleLog.logBasic("errorSqlAll  " + errorSqlAll);
-//                                Statement statementError = executeSql(errorSqlAll.toString(), connection);
-//                                statementError.execute(errorSqlAll.toString());
-//                                close(statementError, null);
-//                            }
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                            kettleLog.logError(e + "");
-//                        }
-////                        }
+
 
                     }
                 }
@@ -414,10 +398,10 @@ public class pgDeleteUtils {
                             Date date1 = new Date();
                             SimpleDateFormat formatter1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                             String endTime = formatter1.format(date1);
-//                            //调用数据结束时间接口
-//                            Map<String, Object> typeMap = new HashMap<>();
-//                            typeMap.put("type", 2);
-//                            transformDataTime(baseUrl, typeMap, accessToken);
+                            //调用数据结束时间接口
+                            Map<String, Object> typeMap = new HashMap<>();
+                            typeMap.put("type", 2);
+                            transformDataTime(baseUrl, typeMap, accessToken);
                             kettleLog.logBasic(" -----【数据删除结束时间为：】----" + endTime);
                             timeSql = "update " + schema + "." + "etl_count  set start_time =null";
                             String updateTableEndSql = "update  " + schema + ".tablestatus   set  status = 1";  //状态全部置为1
@@ -473,27 +457,6 @@ public class pgDeleteUtils {
     }
 
 
-    private static String isForbid(String baseUrl, Map<String, Object> transformMap, String token) throws IOException {
-
-        LogChannelFactory logChannelFactory = new org.pentaho.di.core.logging.LogChannelFactory();
-        LogChannel kettleLog = logChannelFactory.create("查看是否被禁用");
-
-        String DataUrl = baseUrl + "/etl/etl/check_forbid";
-
-        kettleResponse kettleResponse = HttpClientUtils.doPost(DataUrl, token, JSON.toJSONString(transformMap, SerializerFeature.WriteMapNullValue));  //上报数据接口
-        if (kettleResponse.getCode() == 200) {
-            JSONObject returnJsonObject = JSON.parseObject(kettleResponse.getData());
-            if ((int) returnJsonObject.get("code") == 0) {
-                kettleLog.logBasic(" ");
-                return " ";
-            }
-            return null;
-        }
-
-        return null;
-    }
-
-
     private static String getToken(String baseUrl, String secret, String clientId) throws IOException {
 
         LogChannelFactory logChannelFactory = new org.pentaho.di.core.logging.LogChannelFactory();
@@ -530,7 +493,7 @@ public class pgDeleteUtils {
                                                String secret, String clientId) throws Exception {
         LogChannelFactory logChannelFactory = new org.pentaho.di.core.logging.LogChannelFactory();
         LogChannel kettleLog = logChannelFactory.create("调用请求");
-        String DataUrl = baseUrl + "/etl/etl/import_data";
+        String DataUrl = baseUrl + "/etl/etl/delete_data";
         //http://10.80.131.129/api-gate/zuul/etl/etl/import_data
         transformResponse response = new transformResponse();
         kettleResponse kettleResponse = null;  //上报数据接口
@@ -579,7 +542,6 @@ public class pgDeleteUtils {
         if (resultSet != null) {
             resultSet.close();
         }
-
         if (statement != null) {
             statement.close();
         }

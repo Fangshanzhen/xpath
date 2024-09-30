@@ -58,12 +58,13 @@ public class HttpClientUtils {
 
         int statusCode = httpClient.executeMethod(postMethod);
         kettleResponse.setCode(statusCode);
+        kettleLog.logBasic("---statusCode--- "+ statusCode);
 
         InputStream inputStream = postMethod.getResponseBodyAsStream();
         BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8),5*1024*1024);
         StringBuilder stringBuilder = new StringBuilder();
         String str;
-        kettleLog.logBasic("---调用上传数据接口成功1--- ");
+        kettleLog.logBasic("---调用数据接口成功1--- ");
         while ((str = br.readLine()) != null) {
             stringBuilder.append(str);
         }
@@ -79,47 +80,6 @@ public class HttpClientUtils {
         }
 //        kettleLog.logBasic("--------log-----------"+log);
 
-//        if(log.contains("valid rule failed") && !log.contains("accessToken")) {
-//            JSONObject jsonObject = JSON.parseObject(log);
-//            List<String[]> data = new ArrayList<>();
-//            if (jsonObject.get("code").equals(0)) {
-//                JSONArray jsonArray = jsonObject.getJSONArray("data");
-//                if (jsonArray.size() > 0) {
-//                    for (int i = 0; i < jsonArray.size(); i++) {
-//                        List<String> list = new ArrayList<>();
-//                        JSONObject a = (JSONObject) jsonArray.get(i);
-//                        list.add((String) a.get("id"));
-//                        JSONObject errorLog = (JSONObject) a.get("errorLog");
-//
-//                        String errorMsg = (String) errorLog.get("errorMsg");
-//                        String errorType = (String) errorLog.get("errorType");
-//
-//                        if (errorMsg != null && errorMsg.contains("field")) {
-//                            Pattern pattern = Pattern.compile("valid rule failed, field (.*) value");
-//                            Matcher matcher = pattern.matcher(errorMsg);
-//                            if (matcher.find()) {
-//                                list.add(matcher.group(1)); //group(0)表示匹配到的子字符串,group(1)表示匹配到的子字符串的第一组
-//                            }
-//                        }
-//                        if (errorMsg != null && errorMsg.contains("value")) {
-//                            Pattern pattern = Pattern.compile(" value:(.*)");
-//                            Matcher matcher = pattern.matcher(errorMsg);
-//                            if (matcher.find()) {
-//                                list.add(matcher.group(1).replace("(", "").replace(")", ""));
-//                            }
-//                        }
-//                        list.add(errorType.substring(37));
-//                        String[] xx = new String[4];
-//                        data.add(list.toArray(xx));
-//
-//                        System.out.println(list);
-//
-//                    }
-//                }
-//
-//            }
-//            CsvUtils.appendCSV("C:\\Users\\Administrator\\Desktop\\test.csv", data);
-//        }
 
         kettleResponse.setData(log);
         return kettleResponse;
