@@ -141,7 +141,7 @@ public class TransformDataUtils {
 
                 if (tableList != null && tableList.size() > 0) {
                     for (String s1 : tableList) {
-
+                        kettleLog.logBasic("当前传输表名为:  " + s1);
                         StringBuilder errorSqlAll = new StringBuilder("insert into  " + schema + ".error_log (tablename, id, success, errorlog, errortime) values"); //针对妇幼医院postgresql，把错误信息写进数据库
 
                         Statement statementCommon;
@@ -199,6 +199,7 @@ public class TransformDataUtils {
 
                             transformMap.put("collection", tableName);
                             transformMap.put("infoMaps", infoMaps);
+
 
                             List<String> idList = new ArrayList<>();
 
@@ -456,7 +457,7 @@ public class TransformDataUtils {
         LogChannelFactory logChannelFactory = new org.pentaho.di.core.logging.LogChannelFactory();
         LogChannel kettleLog = logChannelFactory.create("获取token");
         String TokenUrl = baseUrl + "/auth/auth/token?secret=" + secret + "&clientId=" + clientId;
-//        kettleLog.logBasic("TokenUrl  " + TokenUrl);
+     //   kettleLog.logBasic("TokenUrl：  " + TokenUrl);
         kettleResponse kettleResponse = null;  //获取token接口
         try {
             kettleResponse = HttpClientUtils.doPost(TokenUrl, null, null);

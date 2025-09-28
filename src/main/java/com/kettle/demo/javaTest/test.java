@@ -5,12 +5,14 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.kettle.demo.response.kettleResponse;
 import com.kettle.demo.utils.HttpClientUtils;
+import lombok.Data;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.pentaho.di.core.logging.LogChannel;
 import org.pentaho.di.core.logging.LogChannelFactory;
+import org.pentaho.di.core.plugins.DatabaseMetaPlugin;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,8 +32,8 @@ import java.util.Map;
 public class test {
     public static void main(String[] args) throws IOException {
 // http://10.80.131.129/api-gate/zuul
-        String secret = "x9fj83bakz21q0w5e6yr4l7npmi8s2gh";
-        String clientId = "client32";
+        String secret = "044bd7a5740f46d89b19425fa658ec0c";
+        String clientId = "client45";
 
 //        String authUrl="http://10.0.108.51:18010";  //本地测试
         String authUrl = "http://10.80.116.73/api-gate/zuul";  //测试环境

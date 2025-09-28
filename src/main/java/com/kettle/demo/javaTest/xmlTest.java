@@ -18,7 +18,7 @@ public class xmlTest {
 
     public static void main(String[] args) throws Exception {
 
-        String publicKeyPath = "C:\\Users\\fsz\\Desktop\\key.pub";
+        String publicKeyPath = "C:\\Users\\Dell\\Desktop\\key.pub";
         PublicKey publicKey = RSAPublicKeyReader.readPublicKey(publicKeyPath);
         Instant instant = Instant.now();
         // 使用java.time.Instant获取当前时间戳（毫秒）
@@ -27,14 +27,14 @@ public class xmlTest {
 
 
 
-
         System.out.println("时间戳："+timestampMillis);
 
-        String s = "clientId=q_client25&idCard=610202195005243213&idType=01&nonce=1234567890123456&secret=8fcf8e0c97244b23aa029342dcea92a5&timestamp=" + timestampMillis;
+        String s = "clientId=q_client45&idCard=610502198003210039&idType=01&nonce=qA75EBuk1dacjHRG&secret=1c30e9c902904e92ba68d90a0654d533&timestamp=" + timestampMillis;
+        System.out.println(s);
         String s1 = sha1(s);
 
         // The string you want to encrypt
-        String data = "{\"info\":{\"clientId\":\"q_client25\",\"secret\":\"8fcf8e0c97244b23aa029342dcea92a5\",\"idType\":\"01\",\"idCard\":\"610202195005243213\"},\"timestamp\":\"#\",\"nonce\":\"1234567890123456\",\"signature\":\"@\"}"
+        String data = "{\"info\":{\"clientId\":\"q_client45\",\"secret\":\"1c30e9c902904e92ba68d90a0654d533\",\"idType\":\"01\",\"idCard\":\"610502198003210039\"},\"timestamp\":\"#\",\"nonce\":\"qA75EBuk1dacjHRG\",\"signature\":\"@\"}"
                 .replace("#", String.valueOf(timestampMillis))
                 .replace("@", s1);
         System.out.println(data);

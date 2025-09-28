@@ -442,6 +442,7 @@ public class MysqlUtils {
         }
         if (kettleResponse.getCode() == 200) {
             JSONObject jsonObject = JSON.parseObject(kettleResponse.getData());
+//            kettleLog.logBasic("获取token: " + jsonObject);
             JSONObject jsonObject1 = (JSONObject) jsonObject.get("data");
             String accessToken = String.valueOf(jsonObject1.get("accessToken"));
             String expiresIn = String.valueOf(jsonObject1.get("expiresIn"));

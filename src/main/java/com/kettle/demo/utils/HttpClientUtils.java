@@ -49,7 +49,7 @@ public class HttpClientUtils {
         if (token != null) {
             postMethod.addRequestHeader("AIIT-ZHYL-AUTH", token);
         }
-//           kettleLog.logBasic("--------jsonStr-----------"+jsonStr);
+//           kettleLog.logBasic("--------jsonStr-----------"+jsonStr);  //打印json数据
         if (jsonStr != null) {
             RequestEntity requestEntity = new StringRequestEntity(jsonStr, "application/json", "UTF-8");
 
@@ -65,6 +65,7 @@ public class HttpClientUtils {
         StringBuilder stringBuilder = new StringBuilder();
         String str;
         kettleLog.logBasic("---调用数据接口成功1--- ");
+
         while ((str = br.readLine()) != null) {
             stringBuilder.append(str);
         }

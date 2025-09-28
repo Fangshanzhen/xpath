@@ -197,6 +197,10 @@
             <id>pentaho</id>
             <url>https://nexus.pentaho.org/content/groups/omni/</url>
         </repository>
+        <repository>
+            <id>pentaho-public</id>
+            <url>https://repo.pentaho.org/artifactory/public/</url>
+        </repository>
 
     </repositories>
 
