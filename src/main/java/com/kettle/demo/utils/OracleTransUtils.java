@@ -175,7 +175,7 @@ public class OracleTransUtils {
                                 tableName = tableName.substring(2);
                             }
 
-                            transformMap.put("collection", tableName.toLowerCase());    //oracle 表名大写改成小写
+                            transformMap.put("collection", tableName.toLowerCase().trim());    //oracle 表名大写改成小写
                             transformMap.put("infoMaps", infoMaps);
 
 //                            kettleLog.logBasic("transformMap:  " + transformMap);
