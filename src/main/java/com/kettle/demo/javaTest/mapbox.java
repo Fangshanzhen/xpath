@@ -45,7 +45,7 @@ public class mapbox {
             for (int i = 0; i < reachableHospitals.size(); i++) {
                 Hospital h = reachableHospitals.get(i);
                 System.out.printf(
-                        "%d. 名称：%s%n   地址：%s%n   坐标：%s%n   驾车耗时：%d分%d秒%n%n",
+                        "%d. 医院名称：%s%n   医院地址：%s%n   医院坐标：%s%n   驾车耗时：%d分%d秒%n%n",
                         i + 1, h.name, h.fullAddress, h.coordinate, h.durationSeconds / 60, h.durationSeconds % 60
                 );
             }
@@ -81,7 +81,7 @@ public class mapbox {
                 .addQueryParameter("types", "place") // 关键：指定“城市”类型（地级市级别）
                 .addQueryParameter("limit", "1") // 只返回1个最匹配结果
                 .build();
-        System.out.println("1  "+httpUrl);
+        System.out.println("获取渭南市中心坐标： "+httpUrl);
 
         Request request = new Request.Builder().url(httpUrl).build();
         Response response = client.newCall(request).execute();
@@ -131,25 +131,25 @@ public class mapbox {
                 .addPathSegment("search")
                 .addPathSegment("searchbox")
                 .addPathSegment("v1")
-            //    .addPathSegment("category")
-             //   .addPathSegment(HOSPITAL_CATEGORY) // 医院分类ID作为路径参数（关键修复）
-              //  .addPathSegment("healthcare")  // 尝试兼容 healthcare 大类（包含医院、诊所等）替代原有的 "hospital"
+                .addPathSegment("category")
+//                .addPathSegment(HOSPITAL_CATEGORY) // 医院分类ID作为路径参数（关键修复）
+//                .addPathSegment("healthcare")  // 尝试兼容 healthcare 大类（包含医院、诊所等）替代原有的 "hospital"
 
 
                 .addPathSegment("forward")
-                .addQueryParameter("q", "渭南市 医院") // 增加城市名限定，提高相关性
+                .addQueryParameter("q", "渭南   医院") // 增加城市名限定，提高相关性
                 .addQueryParameter("access_token", ACCESS_TOKEN)
            //     .addQueryParameter("proximity", center.lon + "," + center.lat) // 中心点附近优先
                 .addQueryParameter("country", "cn") // 限定中国
                 .addQueryParameter("limit", "10") // Limit must be in range [1,10]
                 .build();
-        System.out.println("分类搜索URL "+httpUrl);
+
         Request request = new Request.Builder().url(httpUrl).build();
         Response response = client.newCall(request).execute();
 
         // 调试信息
-        System.out.println("医院搜索v6 URL：" + httpUrl);
-        System.out.println("医院搜索v6 响应码：" + response.code());
+        System.out.println("查找医院： "+httpUrl);
+        System.out.println("医院搜索响应码：" + response.code());
         if (!response.isSuccessful()) {
             String errorBody = response.body() != null ? response.body().string() : "无错误信息";
             System.out.println("医院搜索v6 错误详情：" + errorBody);
@@ -194,7 +194,9 @@ public class mapbox {
             double lat = coordinates.get(1).getAsDouble();
 
             hospitals.add(new Hospital(name, fullAddress, new Coordinate(lon, lat)));
+
         }
+
         return hospitals;
     }
 
@@ -227,7 +229,7 @@ public class mapbox {
                     .addQueryParameter("alternatives", "false")  //alternatives=false：不返回备选路线
                     .addQueryParameter("overview", "simplified")
                     .build();
-            System.out.println("3  "+httpUrl);
+            System.out.println("路线规划：  "+httpUrl);
             Request request = new Request.Builder().url(httpUrl).build();
             Response response = client.newCall(request).execute();
 

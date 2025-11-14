@@ -79,7 +79,7 @@ public class HttpClientUtils {
         } else {
 //          kettleLog.logBasic(log);
         }
-        kettleLog.logBasic("--------log-----------"+log);
+  //      kettleLog.logBasic("--------log-----------"+log);
 
 
         kettleResponse.setData(log);

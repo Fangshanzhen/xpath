@@ -176,12 +176,12 @@
         <dependency>
             <groupId>pentaho-kettle</groupId>
             <artifactId>kettle-core</artifactId>
-            <version>8.0.0.6-352</version>
+            <version>8.2.0.0-342</version>
         </dependency>
         <dependency>
             <groupId>pentaho-kettle</groupId>
             <artifactId>kettle-engine</artifactId>
-            <version>8.0.0.6-352</version>
+            <version>8.2.0.0-342</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -190,17 +190,7 @@
         </dependency>
 
 
-        <!-- Mapbox Java SDK -->
-        <dependency>
-            <groupId>com.mapbox.mapboxsdk</groupId>
-            <artifactId>mapbox-java-geocoding</artifactId>
-            <version>5.8.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.mapbox.mapboxsdk</groupId>
-            <artifactId>mapbox-java-directions</artifactId>
-            <version>5.8.0</version>
-        </dependency>
+
         <!-- 网络请求 -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
@@ -218,6 +208,17 @@
     </dependencies>
 
     <repositories>
+        <!-- 阿里云公共仓库（优先下载，提高稳定性） -->
+        <repository>
+            <id>aliyun-public</id>
+            <url>https://maven.aliyun.com/repository/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
         <repository>
             <id>pentaho</id>
             <url>https://nexus.pentaho.org/content/groups/omni/</url>
